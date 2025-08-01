@@ -637,10 +637,19 @@ export default function InschrijvenPage() {
                   </div>
 
                   <div className="space-y-4">
-                    {[1, 2, 3, 4, 5].map(day => (
+                    {[1, 2, 3, 4, 5].map(day => {
+                      const getTrainerName = (dayNumber: number) => {
+                        if (dayNumber === 4) return 'Frans' // Donderdag
+                        return 'Jorik' // Maandag, Dinsdag, Woensdag, Vrijdag
+                      }
+                      
+                      return (
                       <div key={day} className="border rounded-lg p-4">
                         <h3 className="font-bold text-xl text-gray-900 mb-3">
                           {DAYS_OF_WEEK[day as keyof typeof DAYS_OF_WEEK]}
+                          <span className="text-sm font-normal text-gray-600 ml-2">
+                            (Trainer: {getTrainerName(day)})
+                          </span>
                         </h3>
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                           {TIME_SLOTS.map(timeSlot => {
@@ -691,7 +700,8 @@ export default function InschrijvenPage() {
                           })}
                         </div>
                       </div>
-                    ))}
+                      )
+                    })}
                   </div>
 
                   {errors.preferences?.preferences && (
