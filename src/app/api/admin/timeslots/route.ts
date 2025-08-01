@@ -1,24 +1,44 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { prisma } from '@/lib/prisma'
+import { supabaseAdmin } from '@/lib/supabase'
 
 export async function GET() {
   try {
-    const timeslots = await prisma.timeslot.findMany({
-      include: {
-        _count: {
-          select: {
-            preferences: true,
-            assignments: true
+    // First get all timeslots
+    const { data: timeslots, error: timeslotsError } = await supabaseAdmin
+      .from('timeslots')
+      .select('*')
+      .order('dayOfWeek', { ascending: true })
+      .order('startTime', { ascending: true })
+
+    if (timeslotsError) {
+      throw timeslotsError
+    }
+
+    // Then get counts for each timeslot
+    const timeslotsWithCounts = await Promise.all(
+      (timeslots || []).map(async (timeslot) => {
+        const [preferencesResult, assignmentsResult] = await Promise.all([
+          supabaseAdmin
+            .from('team_preferences')
+            .select('id', { count: 'exact', head: true })
+            .eq('timeslotId', timeslot.id),
+          supabaseAdmin
+            .from('assignments')
+            .select('id', { count: 'exact', head: true })
+            .eq('timeslotId', timeslot.id)
+        ])
+
+        return {
+          ...timeslot,
+          _count: {
+            preferences: preferencesResult.count || 0,
+            assignments: assignmentsResult.count || 0
           }
         }
-      },
-      orderBy: [
-        { dayOfWeek: 'asc' },
-        { startTime: 'asc' }
-      ]
-    })
+      })
+    )
 
-    return NextResponse.json(timeslots)
+    return NextResponse.json(timeslotsWithCounts)
   } catch (error) {
     console.error('Error fetching timeslots:', error)
     return NextResponse.json(
@@ -32,10 +52,16 @@ export async function PATCH(request: NextRequest) {
   try {
     const { timeslotId, isActive } = await request.json()
 
-    const updatedTimeslot = await prisma.timeslot.update({
-      where: { id: timeslotId },
-      data: { isActive }
-    })
+    const { data: updatedTimeslot, error } = await supabaseAdmin
+      .from('timeslots')
+      .update({ isActive })
+      .eq('id', timeslotId)
+      .select()
+      .single()
+
+    if (error) {
+      throw error
+    }
 
     return NextResponse.json({
       success: true,

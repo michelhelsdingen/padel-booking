@@ -3,8 +3,17 @@ import { getLotteryStatistics } from '@/lib/lottery'
 
 export async function GET() {
   try {
-    const stats = await getLotteryStatistics()
-    return NextResponse.json(stats)
+    // For now, return basic empty stats since lottery system uses Prisma
+    // TODO: Convert lottery system to Supabase
+    return NextResponse.json({
+      totalTeams: 0,
+      assignedTeams: 0,
+      unassignedTeams: 0,
+      totalPreferences: 0,
+      assignmentsByRound: {},
+      assignmentsByDay: {},
+      assignments: []
+    })
   } catch (error) {
     console.error('Error fetching lottery statistics:', error)
     return NextResponse.json(

@@ -1,47 +1,43 @@
 import { NextResponse } from 'next/server'
-import { prisma } from '@/lib/prisma'
+import { supabaseAdmin } from '@/lib/supabase'
 
 export async function GET() {
   try {
-    const teams = await prisma.team.findMany({
-      include: {
-        members: {
-          select: {
-            firstName: true,
-            lastName: true,
-            email: true
-          }
-        },
-        preferences: {
-          include: {
-            timeslot: {
-              select: {
-                id: true,
-                dayOfWeek: true,
-                startTime: true,
-                endTime: true
-              }
-            }
-          },
-          orderBy: { priority: 'asc' }
-        },
-        assignments: {
-          include: {
-            timeslot: {
-              select: {
-                id: true,
-                dayOfWeek: true,
-                startTime: true,
-                endTime: true
-              }
-            }
-          }
-        }
-      },
-      orderBy: { createdAt: 'desc' }
-    })
+    const { data: teams, error } = await supabaseAdmin
+      .from('teams')
+      .select(`
+        *,
+        members:team_members(
+          firstName,
+          lastName,
+          email
+        ),
+        preferences:team_preferences(
+          *,
+          timeslot:timeslots(
+            id,
+            dayOfWeek,
+            startTime,
+            endTime
+          )
+        ),
+        assignments:assignments(
+          *,
+          timeslot:timeslots(
+            id,
+            dayOfWeek,
+            startTime,
+            endTime
+          )
+        )
+      `)
+      .order('createdAt', { ascending: false })
 
-    return NextResponse.json(teams)
+    if (error) {
+      throw error
+    }
+
+    return NextResponse.json(teams || [])
   } catch (error) {
     console.error('Error fetching teams:', error)
     return NextResponse.json(

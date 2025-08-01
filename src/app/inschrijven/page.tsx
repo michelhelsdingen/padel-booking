@@ -1,6 +1,7 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
+import React from 'react'
 import { useForm, useFieldArray } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Plus, Minus } from 'lucide-react'
@@ -24,6 +25,30 @@ export default function InschrijvenPage() {
   const [step, setStep] = useState(1)
   const [timeslots, setTimeslots] = useState<Timeslot[]>([])
   const [isLoading, setIsLoading] = useState(false)
+  const [emailCheck, setEmailCheck] = useState<{
+    isChecking: boolean
+    exists: boolean | null
+    message: string
+  }>({
+    isChecking: false,
+    exists: null,
+    message: ''
+  })
+  
+  const [editMode, setEditMode] = useState<{
+    isActive: boolean
+    showCodeInput: boolean
+    isSendingCode: boolean
+    isVerifyingCode: boolean
+    code: string
+    teamId?: string
+  }>({
+    isActive: false,
+    showCodeInput: false,
+    isSendingCode: false,
+    isVerifyingCode: false,
+    code: ''
+  })
 
   const {
     register,
@@ -89,13 +114,17 @@ export default function InschrijvenPage() {
     console.log('Form submitted with data:', data)
     setIsLoading(true)
     
-    const loadingToast = toast.loading('Bezig met inschrijven...')
+    const loadingToast = toast.loading(editMode.isActive ? 'Bezig met bijwerken...' : 'Bezig met inschrijven...')
     
     try {
-      const response = await fetch('/api/registrations', {
-        method: 'POST',
+      const url = editMode.isActive ? '/api/registrations/update' : '/api/registrations'
+      const method = editMode.isActive ? 'PUT' : 'POST'
+      const body = editMode.isActive ? { ...data, teamId: editMode.teamId } : data
+      
+      const response = await fetch(url, {
+        method,
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data)
+        body: JSON.stringify(body)
       })
 
       console.log('Response status:', response.status)
@@ -105,7 +134,7 @@ export default function InschrijvenPage() {
         const result = await response.json()
         console.log('Success result:', result)
         toast.dismiss(loadingToast)
-        toast.success('Inschrijving succesvol! Je ontvangt een bevestigingsmail.', {
+        toast.success(editMode.isActive ? 'Gegevens succesvol bijgewerkt! Je ontvangt een bevestigingsmail.' : 'Inschrijving succesvol! Je ontvangt een bevestigingsmail.', {
           duration: 5000,
         })
         setStep(4) // Success step
@@ -175,6 +204,138 @@ export default function InschrijvenPage() {
     }
   }
 
+  // Email checking function with debounce
+  const checkEmailAvailability = async (email: string) => {
+    if (!email || !email.includes('@')) {
+      setEmailCheck({ isChecking: false, exists: null, message: '' })
+      return
+    }
+
+    setEmailCheck({ isChecking: true, exists: null, message: 'Controleren...' })
+
+    try {
+      const response = await fetch('/api/check-email', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email })
+      })
+
+      const result = await response.json()
+
+      if (response.ok) {
+        setEmailCheck({
+          isChecking: false,
+          exists: result.exists,
+          message: result.message
+        })
+      } else {
+        setEmailCheck({
+          isChecking: false,
+          exists: null,
+          message: 'Fout bij controleren e-mailadres'
+        })
+      }
+    } catch (error) {
+      console.error('Error checking email:', error)
+      setEmailCheck({
+        isChecking: false,
+        exists: null,
+        message: 'Fout bij controleren e-mailadres'
+      })
+    }
+  }
+
+  // Simple debounce function
+  const debounce = (func: Function, wait: number) => {
+    let timeout: NodeJS.Timeout
+    return (...args: any[]) => {
+      clearTimeout(timeout)
+      timeout = setTimeout(() => func.apply(null, args), wait)
+    }
+  }
+
+  // Debounced email check
+  const debouncedEmailCheck = useCallback(
+    debounce((email: string) => checkEmailAvailability(email), 1000),
+    []
+  )
+
+  // Send edit code
+  const sendEditCode = async (email: string) => {
+    setEditMode(prev => ({ ...prev, isSendingCode: true }))
+    
+    try {
+      const response = await fetch('/api/auth/send-code', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email })
+      })
+
+      const result = await response.json()
+
+      if (response.ok) {
+        setEditMode(prev => ({ 
+          ...prev, 
+          showCodeInput: true, 
+          isSendingCode: false 
+        }))
+        toast.success('Wijzigingscode verstuurd naar je e-mailadres')
+      } else {
+        toast.error(result.error || 'Fout bij versturen code')
+        setEditMode(prev => ({ ...prev, isSendingCode: false }))
+      }
+    } catch (error) {
+      console.error('Error sending edit code:', error)
+      toast.error('Er is een fout opgetreden')
+      setEditMode(prev => ({ ...prev, isSendingCode: false }))
+    }
+  }
+
+  // Verify edit code
+  const verifyEditCode = async (email: string, code: string) => {
+    setEditMode(prev => ({ ...prev, isVerifyingCode: true }))
+    
+    try {
+      const response = await fetch('/api/auth/verify-code', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, code })
+      })
+
+      const result = await response.json()
+
+      if (response.ok) {
+        // Load existing team data into form
+        const { formData, teamId } = result
+        
+        // Set form values
+        setValue('team.firstName', formData.team.firstName)
+        setValue('team.lastName', formData.team.lastName)
+        setValue('team.contactEmail', formData.team.contactEmail)
+        setValue('team.members', formData.team.members)
+        setValue('preferences.preferences', formData.preferences.preferences)
+        
+        setEditMode(prev => ({ 
+          ...prev, 
+          isActive: true, 
+          teamId, 
+          showCodeInput: false,
+          isVerifyingCode: false 
+        }))
+        
+        toast.success('Gegevens geladen! Je kunt nu wijzigingen maken.')
+        setStep(2) // Go directly to step 2 since basic info is already filled
+      } else {
+        toast.error(result.error || 'Ongeldige code')
+        setEditMode(prev => ({ ...prev, isVerifyingCode: false }))
+      }
+    } catch (error) {
+      console.error('Error verifying edit code:', error)
+      toast.error('Er is een fout opgetreden')
+      setEditMode(prev => ({ ...prev, isVerifyingCode: false }))
+    }
+  }
+
   if (step === 4) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50 flex items-center justify-center">
@@ -207,9 +368,18 @@ export default function InschrijvenPage() {
           <div className="bg-white rounded-lg shadow-lg p-8">
             <div className="mb-8">
               <div className="flex items-center justify-between mb-4">
-                <h1 className="text-3xl font-bold">Team Inschrijven</h1>
+                <h1 className="text-3xl font-bold">
+                  {editMode.isActive ? 'Inschrijving Wijzigen' : 'Team Inschrijven'}
+                </h1>
                 <Link href="/" className="text-blue-600 hover:underline">← Terug</Link>
               </div>
+              {editMode.isActive && (
+                <div className="bg-green-50 border border-green-200 rounded-lg p-3 mb-4">
+                  <p className="text-sm text-green-800">
+                    <strong>Wijzigingsmodus actief:</strong> Je kunt nu je teamleden en tijdslot voorkeuren aanpassen.
+                  </p>
+                </div>
+              )}
               
               <div className="flex space-x-4 mb-6">
                 <div className={`flex-1 h-2 rounded ${step >= 1 ? 'bg-green-500' : 'bg-gray-200'}`} />
@@ -257,14 +427,98 @@ export default function InschrijvenPage() {
 
                     <div>
                       <label className="block text-base font-bold text-gray-900 mb-2">Contact E-mail *</label>
-                      <input
-                        {...register('team.contactEmail')}
-                        type="email"
-                        className="w-full p-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent font-medium text-gray-900 placeholder-gray-500"
-                        placeholder="team@email.com"
-                      />
+                      <div className="relative">
+                        <input
+                          {...register('team.contactEmail')}
+                          type="email"
+                          className={`w-full p-3 border-2 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent font-medium text-gray-900 placeholder-gray-500 ${
+                            emailCheck.exists === true 
+                              ? 'border-red-300 bg-red-50' 
+                              : emailCheck.exists === false 
+                              ? 'border-green-300 bg-green-50' 
+                              : 'border-gray-300'
+                          }`}
+                          placeholder="team@email.com"
+                          onChange={(e) => {
+                            const value = e.target.value
+                            register('team.contactEmail').onChange(e)
+                            if (value) {
+                              debouncedEmailCheck(value)
+                            } else {
+                              setEmailCheck({ isChecking: false, exists: null, message: '' })
+                            }
+                          }}
+                        />
+                        {emailCheck.isChecking && (
+                          <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                            <div className="animate-spin h-4 w-4 border-2 border-blue-500 border-t-transparent rounded-full"></div>
+                          </div>
+                        )}
+                        {emailCheck.exists === false && (
+                          <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                            <span className="text-green-500 text-lg">✓</span>
+                          </div>
+                        )}
+                        {emailCheck.exists === true && (
+                          <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                            <span className="text-red-500 text-lg">✗</span>
+                          </div>
+                        )}
+                      </div>
                       {errors.team?.contactEmail && (
                         <p className="text-red-500 text-sm mt-1">{errors.team.contactEmail.message}</p>
+                      )}
+                      {emailCheck.message && !errors.team?.contactEmail && (
+                        <p className={`text-sm mt-1 font-medium ${
+                          emailCheck.exists === true ? 'text-red-600' : 
+                          emailCheck.exists === false ? 'text-green-600' : 
+                          'text-blue-600'
+                        }`}>
+                          {emailCheck.message}
+                        </p>
+                      )}
+                      {emailCheck.exists === true && !editMode.showCodeInput && !editMode.isActive && (
+                        <div className="mt-3 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                          <p className="text-sm text-blue-800 mb-2">
+                            <strong>Wil je je inschrijving wijzigen?</strong> We kunnen je een code sturen om je teamleden of tijdslot voorkeuren aan te passen.
+                          </p>
+                          <button
+                            type="button"
+                            onClick={() => sendEditCode(watch('team.contactEmail'))}
+                            disabled={editMode.isSendingCode}
+                            className="bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white px-4 py-2 rounded-lg text-sm transition-colors"
+                          >
+                            {editMode.isSendingCode ? 'Versturen...' : 'Wijzigingscode Versturen'}
+                          </button>
+                        </div>
+                      )}
+                      {editMode.showCodeInput && (
+                        <div className="mt-3 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+                          <p className="text-sm text-yellow-800 mb-3">
+                            <strong>Voer de 6-cijferige code in</strong> die we naar je e-mailadres hebben gestuurd:
+                          </p>
+                          <div className="flex gap-2">
+                            <input
+                              type="text"
+                              value={editMode.code}
+                              onChange={(e) => setEditMode(prev => ({ ...prev, code: e.target.value }))}
+                              placeholder="123456"
+                              className="flex-1 p-2 border-2 border-yellow-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent font-mono text-center"
+                              maxLength={6}
+                            />
+                            <button
+                              type="button"
+                              onClick={() => verifyEditCode(watch('team.contactEmail'), editMode.code)}
+                              disabled={editMode.isVerifyingCode || editMode.code.length !== 6}
+                              className="bg-yellow-600 hover:bg-yellow-700 disabled:bg-gray-400 text-white px-4 py-2 rounded-lg text-sm transition-colors"
+                            >
+                              {editMode.isVerifyingCode ? 'Controleren...' : 'Verifiëren'}
+                            </button>
+                          </div>
+                          <p className="text-xs text-yellow-700 mt-2">
+                            Code niet ontvangen? <button type="button" onClick={() => sendEditCode(watch('team.contactEmail'))} className="underline">Opnieuw versturen</button>
+                          </p>
+                        </div>
                       )}
                     </div>
 
@@ -332,13 +586,14 @@ export default function InschrijvenPage() {
                       type="button"
                       onClick={async () => {
                         const isValid = await trigger(['team.firstName', 'team.lastName', 'team.contactEmail'])
-                        if (isValid) {
+                        if (isValid && emailCheck.exists !== true) {
                           setStep(2)
                         }
                       }}
-                      className="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded-lg transition-colors"
+                      disabled={emailCheck.isChecking || emailCheck.exists === true}
+                      className="bg-green-600 hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-white px-6 py-2 rounded-lg transition-colors"
                     >
-                      Volgende
+                      {emailCheck.isChecking ? 'Controleren...' : 'Volgende'}
                     </button>
                   </div>
                 </div>
@@ -520,7 +775,7 @@ export default function InschrijvenPage() {
                       }}
                       className="bg-green-600 hover:bg-green-700 disabled:bg-gray-400 text-white px-6 py-2 rounded-lg transition-colors"
                     >
-                      {isLoading ? 'Bezig met versturen...' : 'Inschrijving Bevestigen'}
+{isLoading ? (editMode.isActive ? 'Bezig met bijwerken...' : 'Bezig met versturen...') : (editMode.isActive ? 'Wijzigingen Opslaan' : 'Inschrijving Bevestigen')}
                     </button>
                   </div>
                 </div>

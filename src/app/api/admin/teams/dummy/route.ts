@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
-import { prisma } from '@/lib/prisma'
+import { supabaseAdmin } from '@/lib/supabase'
+import { v4 as uuidv4 } from 'uuid'
 
 // Dutch first names
 const DUTCH_FIRST_NAMES = [
@@ -42,12 +43,16 @@ function getRandomIntInRange(min: number, max: number): number {
 export async function POST() {
   try {
     // First, get all active timeslots
-    const timeslots = await prisma.timeslot.findMany({
-      where: { isActive: true },
-      select: { id: true }
-    })
+    const { data: timeslots, error: timeslotsError } = await supabaseAdmin
+      .from('timeslots')
+      .select('id')
+      .eq('isActive', true)
 
-    if (timeslots.length === 0) {
+    if (timeslotsError) {
+      throw timeslotsError
+    }
+
+    if (!timeslots || timeslots.length === 0) {
       return NextResponse.json(
         { error: 'Geen actieve tijdsloten gevonden om voorkeuren aan toe te wijzen' },
         { status: 400 }
@@ -149,45 +154,73 @@ export async function POST() {
       })
     }
 
-    // Create all teams with their members and preferences in a transaction
-    const result = await prisma.$transaction(async (tx) => {
-      const createdTeams = []
+    // Create all teams with their members and preferences
+    const createdTeams = []
+    const timestamp = new Date().toISOString()
 
-      for (const teamData of teams) {
-        const team = await tx.team.create({
-          data: {
-            firstName: teamData.firstName,
-            lastName: teamData.lastName,
-            contactEmail: teamData.contactEmail,
-            memberCount: teamData.memberCount,
-            members: {
-              create: teamData.members
-            },
-            preferences: {
-              create: teamData.preferences
-            }
-          },
-          include: {
-            members: true,
-            preferences: {
-              include: {
-                timeslot: true
-              }
-            }
-          }
+    for (const teamData of teams) {
+      const teamId = uuidv4()
+      
+      // Create team
+      const { data: team, error: teamError } = await supabaseAdmin
+        .from('teams')
+        .insert({
+          id: teamId,
+          firstName: teamData.firstName,
+          lastName: teamData.lastName,
+          contactEmail: teamData.contactEmail,
+          memberCount: teamData.memberCount,
+          createdAt: timestamp,
+          updatedAt: timestamp
         })
-        
-        createdTeams.push(team)
+        .select()
+        .single()
+
+      if (teamError) {
+        throw teamError
       }
 
-      return createdTeams
-    })
+      // Create team members
+      const membersToCreate = teamData.members.map(member => ({
+        id: uuidv4(),
+        teamId: team.id,
+        firstName: member.firstName,
+        lastName: member.lastName,
+        email: member.email
+      }))
+
+      const { error: membersError } = await supabaseAdmin
+        .from('team_members')
+        .insert(membersToCreate)
+
+      if (membersError) {
+        throw membersError
+      }
+
+      // Create preferences
+      const preferencesToCreate = teamData.preferences.map(pref => ({
+        id: uuidv4(),
+        teamId: team.id,
+        timeslotId: pref.timeslotId,
+        priority: pref.priority
+      }))
+
+      const { error: preferencesError } = await supabaseAdmin
+        .from('team_preferences')
+        .insert(preferencesToCreate)
+
+      if (preferencesError) {
+        throw preferencesError
+      }
+
+      createdTeams.push(team)
+    }
 
     return NextResponse.json({ 
       success: true,
-      createdCount: result.length,
-      message: `${result.length} dummy teams succesvol aangemaakt`,
-      teams: result
+      createdCount: createdTeams.length,
+      message: `${createdTeams.length} dummy teams succesvol aangemaakt`,
+      teams: createdTeams
     })
   } catch (error) {
     console.error('Error generating dummy data:', error)
