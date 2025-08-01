@@ -57,7 +57,11 @@ export async function GET() {
   } catch (error) {
     console.error('Error fetching timeslots:', error)
     return NextResponse.json(
-      { error: 'Fout bij ophalen tijdsloten' },
+      { 
+        error: 'Fout bij ophalen tijdsloten',
+        details: error instanceof Error ? error.message : 'Unknown error',
+        DATABASE_URL_SET: !!process.env.DATABASE_URL
+      },
       { status: 500 }
     )
   }
