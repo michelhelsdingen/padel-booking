@@ -83,11 +83,14 @@ export default function AdminPage() {
   const [showResultsModal, setShowResultsModal] = useState(false)
   const [selectedTeamsForEmail, setSelectedTeamsForEmail] = useState<string[]>([])
   const [isSendingEmails, setIsSendingEmails] = useState(false)
+  const [hasExistingLottery, setHasExistingLottery] = useState(false)
+  const [showLotteryWarningModal, setShowLotteryWarningModal] = useState(false)
 
   useEffect(() => {
     loadTeams()
     loadLotteryStats()
     loadTimeslots()
+    loadLotteryResults()
   }, [])
 
   const loadTeams = async () => {
@@ -120,6 +123,7 @@ export default function AdminPage() {
       if (response.ok) {
         const data = await response.json()
         setLotteryResults(data)
+        setHasExistingLottery(data.hasResults || false)
         return data
       }
     } catch (err) {
@@ -128,8 +132,17 @@ export default function AdminPage() {
     return null
   }
 
+  const handleLotteryClick = () => {
+    if (hasExistingLottery) {
+      setShowLotteryWarningModal(true)
+    } else {
+      setShowLotteryModal(true)
+    }
+  }
+
   const runLottery = async () => {
     setShowLotteryModal(false)
+    setShowLotteryWarningModal(false)
     setIsRunningLottery(true)
     
     try {
@@ -144,6 +157,7 @@ export default function AdminPage() {
           type: 'success'
         })
         loadLotteryStats()
+        loadLotteryResults() // Refresh lottery results
         loadTeams() // Refresh teams to see assignments
       } else {
         const error = await response.json()
@@ -687,12 +701,23 @@ export default function AdminPage() {
                 <h2 className="text-2xl font-bold text-gray-900">Loting Beheer</h2>
                 <div className="flex space-x-4">
                   <button
-                    onClick={() => setShowLotteryModal(true)}
+                    onClick={handleLotteryClick}
                     disabled={isRunningLottery || teams.length === 0}
-                    className="flex items-center space-x-2 bg-green-600 hover:bg-green-700 disabled:bg-gray-400 text-white px-4 py-2 rounded-lg transition-colors"
+                    className={`flex items-center space-x-2 ${
+                      hasExistingLottery 
+                        ? 'bg-orange-600 hover:bg-orange-700' 
+                        : 'bg-green-600 hover:bg-green-700'
+                    } disabled:bg-gray-400 text-white px-4 py-2 rounded-lg transition-colors`}
                   >
                     <Play className="h-4 w-4" />
-                    <span>{isRunningLottery ? 'Bezig...' : 'Loting Uitvoeren'}</span>
+                    <span>
+                      {isRunningLottery 
+                        ? 'Bezig...' 
+                        : hasExistingLottery 
+                          ? 'Nieuwe Loting Uitvoeren' 
+                          : 'Loting Uitvoeren'
+                      }
+                    </span>
                   </button>
                   <button
                     onClick={showLotteryResults}
@@ -711,6 +736,54 @@ export default function AdminPage() {
                   </button>
                 </div>
               </div>
+
+              {/* Existing Lottery Status */}
+              {hasExistingLottery && lotteryResults && (
+                <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                  <div className="flex items-center justify-between mb-3">
+                    <h3 className="font-bold text-lg text-blue-900">Huidige Loting Status</h3>
+                    <span className="bg-blue-100 text-blue-800 text-sm px-3 py-1 rounded-full font-medium">
+                      Uitgevoerd op {lotteryResults.assignments?.[0]?.assignedAt ? 
+                        new Date(lotteryResults.assignments[0].assignedAt).toLocaleDateString('nl-NL', {
+                          day: 'numeric',
+                          month: 'long',
+                          year: 'numeric',
+                          hour: '2-digit',
+                          minute: '2-digit'
+                        }) : 'Onbekend'
+                      }
+                    </span>
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                    <div className="text-center">
+                      <div className="text-2xl font-bold text-blue-900">{lotteryResults.statistics?.totalTeams || 0}</div>
+                      <div className="text-sm text-blue-700">Totaal Teams</div>
+                    </div>
+                    <div className="text-center">
+                      <div className="text-2xl font-bold text-green-600">{lotteryResults.statistics?.assignedTeams || 0}</div>
+                      <div className="text-sm text-green-700">Toegewezen</div>
+                    </div>
+                    <div className="text-center">
+                      <div className="text-2xl font-bold text-orange-600">{lotteryResults.statistics?.unassignedTeams || 0}</div>
+                      <div className="text-sm text-orange-700">Wachtlijst</div>
+                    </div>
+                    <div className="text-center">
+                      <div className="text-2xl font-bold text-purple-600">
+                        {lotteryResults.statistics?.totalTeams ? 
+                          Math.round((lotteryResults.statistics.assignedTeams / lotteryResults.statistics.totalTeams) * 100) : 0
+                        }%
+                      </div>
+                      <div className="text-sm text-purple-700">Succes Ratio</div>
+                    </div>
+                  </div>
+                  <div className="mt-3 text-sm text-blue-800">
+                    <strong>Methoden:</strong> {Object.entries(lotteryResults.statistics?.assignmentsByMethod || {})
+                      .map(([method, count]) => `${count} via ${method === 'preference' ? 'voorkeur' : method}`)
+                      .join(', ')
+                    }
+                  </div>
+                </div>
+              )}
 
               {lotteryStats && (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -905,6 +978,16 @@ export default function AdminPage() {
             onConfirm={runLottery}
             isRunning={isRunningLottery}
             teamCount={teams.length}
+          />
+        )}
+
+        {/* Lottery Warning Modal */}
+        {showLotteryWarningModal && (
+          <LotteryWarningModal 
+            onClose={() => setShowLotteryWarningModal(false)}
+            onConfirm={runLottery}
+            isRunning={isRunningLottery}
+            existingLotteryStats={lotteryResults?.statistics}
           />
         )}
 
@@ -1945,6 +2028,103 @@ function ClearTeamsModal({ onClose, onConfirm, isClearing, teamCount }: {
             className="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors disabled:bg-gray-400"
           >
             {isClearing ? 'Bezig met verwijderen...' : `Ja, verwijder ${teamCount} teams`}
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// Lottery Warning Modal Component
+function LotteryWarningModal({ onClose, onConfirm, isRunning, existingLotteryStats }: { 
+  onClose: () => void
+  onConfirm: () => void
+  isRunning: boolean
+  existingLotteryStats?: any
+}) {
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+      <div className="bg-white rounded-lg p-6 w-full max-w-md mx-4">
+        <div className="flex items-center justify-between mb-6">
+          <h3 className="text-xl font-bold text-orange-900">Nieuwe Loting Uitvoeren</h3>
+          <button
+            onClick={onClose}
+            className="text-gray-400 hover:text-gray-600"
+            disabled={isRunning}
+          >
+            ✕
+          </button>
+        </div>
+
+        <div className="mb-6">
+          <div className="bg-orange-50 border border-orange-200 rounded-lg p-4 mb-4">
+            <div className="flex items-center">
+              <div className="flex-shrink-0">
+                <svg className="h-5 w-5 text-orange-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.732-.833-2.502 0L4.32 18.5c-.77.833.192 2.5 1.732 2.5z" />
+                </svg>
+              </div>
+              <div className="ml-3">
+                <h3 className="text-sm font-bold text-orange-800">
+                  Er is al een loting uitgevoerd!
+                </h3>
+              </div>
+            </div>
+          </div>
+          
+          {existingLotteryStats && (
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-4">
+              <h4 className="font-bold text-blue-900 mb-2">Huidige Loting Resultaten:</h4>
+              <div className="text-sm text-blue-800 space-y-1">
+                <div>• {existingLotteryStats.assignedTeams} teams toegewezen</div>
+                <div>• {existingLotteryStats.unassignedTeams} teams op wachtlijst</div>
+                <div>• {existingLotteryStats.totalTeams > 0 ? Math.round((existingLotteryStats.assignedTeams / existingLotteryStats.totalTeams) * 100) : 0}% succes ratio</div>
+              </div>
+            </div>
+          )}
+          
+          <p className="text-base font-medium text-gray-900 mb-2">
+            Weet je zeker dat je een nieuwe loting wilt uitvoeren?
+          </p>
+          <p className="text-sm text-gray-700 mb-4">
+            Dit zal:
+          </p>
+          <ul className="text-sm text-gray-700 space-y-1 mb-4">
+            <li>• Alle huidige toewijzingen vervangen</li>
+            <li>• Een nieuwe loting uitvoeren voor alle teams</li>
+            <li>• Mogelijk andere resultaten opleveren</li>
+            <li>• E-mail status resetten</li>
+          </ul>
+          <p className="text-sm font-bold text-orange-700">
+            Let op: Deze actie kan niet ongedaan worden gemaakt!
+          </p>
+        </div>
+
+        <div className="flex space-x-4">
+          <button
+            type="button"
+            onClick={onClose}
+            disabled={isRunning}
+            className="flex-1 px-4 py-2 text-gray-700 bg-gray-200 rounded-lg hover:bg-gray-300 transition-colors disabled:bg-gray-100"
+          >
+            Annuleren
+          </button>
+          <button
+            onClick={onConfirm}
+            disabled={isRunning}
+            className="flex-1 px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors disabled:bg-gray-400 flex items-center justify-center space-x-2"
+          >
+            {isRunning ? (
+              <>
+                <div className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full"></div>
+                <span>Bezig...</span>
+              </>
+            ) : (
+              <>
+                <Play className="h-4 w-4" />
+                <span>Ja, nieuwe loting</span>
+              </>
+            )}
           </button>
         </div>
       </div>
