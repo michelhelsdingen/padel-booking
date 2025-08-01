@@ -9,7 +9,7 @@ export default function Home() {
         <div className="text-center mb-16">
           <div className="mb-6">
             <Image
-              src="/ltc-de-kei-logo.svg"
+              src="/ltc-de-kei-logo.png"
               alt="LTC de Kei Logo"
               width={300}
               height={150}

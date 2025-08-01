@@ -10,6 +10,33 @@ export async function POST(request: NextRequest) {
     // Validate request data
     const validatedData = completeRegistrationSchema.parse(body)
     
+    // Ensure timeslots exist, create default ones if none exist
+    const existingTimeslots = await prisma.timeslot.count()
+    if (existingTimeslots === 0) {
+      const timeSlotsToCreate = []
+      
+      // Days: 1=Monday, 2=Tuesday, 3=Wednesday, 4=Thursday, 5=Friday
+      for (let day = 1; day <= 5; day++) {
+        // Times: 13:30-14:30, 14:30-15:30, ..., 20:30-21:30
+        for (let hour = 13; hour <= 20; hour++) {
+          const startTime = `${hour.toString().padStart(2, '0')}:30`
+          const endTime = `${(hour + 1).toString().padStart(2, '0')}:30`
+          
+          timeSlotsToCreate.push({
+            dayOfWeek: day,
+            startTime,
+            endTime,
+            maxTeams: 5,
+            isActive: true
+          })
+        }
+      }
+      
+      await prisma.timeslot.createMany({
+        data: timeSlotsToCreate
+      })
+    }
+    
     // Check if registration period is active, create one if none exists
     let activeRegistration = await prisma.registrationPeriod.findFirst({
       where: { isActive: true }
