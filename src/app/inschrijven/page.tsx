@@ -16,6 +16,7 @@ interface Timeslot {
   dayOfWeek: number
   startTime: string
   endTime: string
+  preferenceCount: number
 }
 
 export default function InschrijvenPage() {
@@ -66,6 +67,19 @@ export default function InschrijvenPage() {
       }
     } catch (error) {
       console.error('Error loading timeslots:', error)
+    }
+  }
+
+  // Get Dutch popularity indicator
+  const getPopularityInfo = (count: number) => {
+    if (count === 0) {
+      return { text: 'Nog geen keuzes', color: 'text-green-600', bgColor: 'bg-green-50' }
+    } else if (count <= 2) {
+      return { text: `${count} keer gekozen`, color: 'text-yellow-600', bgColor: 'bg-yellow-50' }
+    } else if (count <= 4) {
+      return { text: `${count} keer gekozen`, color: 'text-orange-600', bgColor: 'bg-orange-50' }
+    } else {
+      return { text: `${count} keer gekozen`, color: 'text-red-600', bgColor: 'bg-red-50' }
     }
   }
 
@@ -290,9 +304,31 @@ export default function InschrijvenPage() {
               {step === 2 && (
                 <div>
                   <h2 className="text-2xl font-bold text-gray-900 mb-6">Stap 2: Tijdslot Voorkeuren</h2>
-                  <p className="text-gray-900 font-medium mb-6">
+                  <p className="text-gray-900 font-medium mb-4">
                     Selecteer maximaal 4 tijdsloten. De volgorde bepaalt je prioriteit (1 = hoogste voorkeur).
                   </p>
+                  
+                  <div className="bg-blue-50 p-4 rounded-lg border border-blue-200 mb-6">
+                    <h3 className="font-bold text-blue-900 mb-2">Populariteit van tijdsloten:</h3>
+                    <div className="flex flex-wrap gap-4 text-sm">
+                      <div className="flex items-center">
+                        <span className="mr-2">🟢</span>
+                        <span className="text-green-600 font-medium">Nog geen keuzes - Beste kans!</span>
+                      </div>
+                      <div className="flex items-center">
+                        <span className="mr-2">🟡</span>
+                        <span className="text-yellow-600 font-medium">Weinig gekozen - Goede kans</span>
+                      </div>
+                      <div className="flex items-center">
+                        <span className="mr-2">🟠</span>
+                        <span className="text-orange-600 font-medium">Gemiddeld populair</span>
+                      </div>
+                      <div className="flex items-center">
+                        <span className="mr-2">🔴</span>
+                        <span className="text-red-600 font-medium">Zeer populair - Lage kans</span>
+                      </div>
+                    </div>
+                  </div>
 
                   <div className="space-y-4">
                     {[1, 2, 3, 4, 5].map(day => (
@@ -310,6 +346,7 @@ export default function InschrijvenPage() {
 
                             const isSelected = preferences.some(p => p.timeslotId === timeslot.id)
                             const priority = preferences.find(p => p.timeslotId === timeslot.id)?.priority
+                            const popularityInfo = getPopularityInfo(timeslot.preferenceCount)
 
                             return (
                               <button
@@ -323,12 +360,24 @@ export default function InschrijvenPage() {
                                 }`}
                               >
                                 <div className="flex items-center justify-between">
-                                  <span className="font-bold text-gray-900">{timeSlot.label}</span>
-                                  {isSelected && (
-                                    <span className="bg-green-500 text-white px-2 py-1 rounded text-sm">
-                                      #{priority}
+                                  <div className="flex flex-col">
+                                    <span className="font-bold text-gray-900">{timeSlot.label}</span>
+                                    <span className={`text-xs font-medium ${popularityInfo.color}`}>
+                                      {popularityInfo.text}
                                     </span>
-                                  )}
+                                  </div>
+                                  <div className="flex items-center space-x-2">
+                                    <span className={`px-2 py-1 rounded text-xs font-medium ${popularityInfo.color} ${popularityInfo.bgColor}`}>
+                                      {timeslot.preferenceCount === 0 ? '🟢' : 
+                                       timeslot.preferenceCount <= 2 ? '🟡' : 
+                                       timeslot.preferenceCount <= 4 ? '🟠' : '🔴'}
+                                    </span>
+                                    {isSelected && (
+                                      <span className="bg-green-500 text-white px-2 py-1 rounded text-sm">
+                                        #{priority}
+                                      </span>
+                                    )}
+                                  </div>
                                 </div>
                               </button>
                             )
