@@ -6,10 +6,13 @@ import { z } from 'zod'
 
 export async function POST(request: NextRequest) {
   try {
+    console.log('Registration POST request received')
     const body = await request.json()
+    console.log('Request body:', JSON.stringify(body, null, 2))
     
     // Validate request data
     const validatedData = completeRegistrationSchema.parse(body)
+    console.log('Data validated successfully')
     
     // Ensure timeslots exist, create default ones if none exist
     const { count } = await supabaseAdmin

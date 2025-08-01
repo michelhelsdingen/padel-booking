@@ -98,9 +98,8 @@ export default function InschrijvenPage() {
         body: JSON.stringify(data)
       })
 
-      const result = await response.json()
-      
       if (response.ok) {
+        const result = await response.json()
         toast.dismiss(loadingToast)
         toast.success('Inschrijving succesvol! Je ontvangt een bevestigingsmail.', {
           duration: 5000,
@@ -108,7 +107,17 @@ export default function InschrijvenPage() {
         setStep(4) // Success step
       } else {
         toast.dismiss(loadingToast)
-        toast.error(result.error || 'Er is een fout opgetreden bij de inschrijving')
+        
+        // Try to parse JSON error, but handle HTML error pages
+        let errorMessage = 'Er is een fout opgetreden bij de inschrijving'
+        try {
+          const result = await response.json()
+          errorMessage = result.error || errorMessage
+        } catch (e) {
+          console.error('Failed to parse error response:', e)
+        }
+        
+        toast.error(errorMessage)
       }
     } catch (error) {
       toast.dismiss(loadingToast)
