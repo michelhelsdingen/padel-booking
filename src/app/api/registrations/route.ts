@@ -12,7 +12,7 @@ export async function POST(request: NextRequest) {
     
     // Ensure timeslots exist, create default ones if none exist
     const { count } = await supabaseAdmin
-      .from('Timeslot')
+      .from('timeslots')
       .select('*', { count: 'exact', head: true })
       
     if (count === 0) {
@@ -36,7 +36,7 @@ export async function POST(request: NextRequest) {
       }
       
       const { error: insertError } = await supabaseAdmin
-        .from('Timeslot')
+        .from('timeslots')
         .insert(timeSlotsToCreate)
         
       if (insertError) {
@@ -46,7 +46,7 @@ export async function POST(request: NextRequest) {
     
     // Check if registration period is active, create one if none exists
     const { data: activeRegistrations } = await supabaseAdmin
-      .from('RegistrationPeriod')
+      .from('registration_periods')
       .select('*')
       .eq('isActive', true)
       .limit(1)
@@ -60,7 +60,7 @@ export async function POST(request: NextRequest) {
       const lotteryDate = new Date(registrationEnd.getTime() + (1 * 24 * 60 * 60 * 1000)) // 1 day after
 
       const { data: newRegistration, error: createError } = await supabaseAdmin
-        .from('RegistrationPeriod')
+        .from('registration_periods')
         .insert({
           name: `Inschrijfperiode ${now.toLocaleDateString('nl-NL')}`,
           registrationStart: now.toISOString(),
@@ -92,7 +92,7 @@ export async function POST(request: NextRequest) {
     
     // Check if team email is already registered
     const { data: existingTeam } = await supabaseAdmin
-      .from('Team')
+      .from('teams')
       .select('id')
       .eq('contactEmail', validatedData.team.contactEmail)
       .limit(1)
@@ -107,7 +107,7 @@ export async function POST(request: NextRequest) {
     // Validate timeslots exist
     const timeslotIds = validatedData.preferences.preferences.map(p => p.timeslotId)
     const { data: timeslots } = await supabaseAdmin
-      .from('Timeslot')
+      .from('timeslots')
       .select('id')
       .in('id', timeslotIds)
       .eq('isActive', true)
@@ -121,7 +121,7 @@ export async function POST(request: NextRequest) {
 
     // Create team
     const { data: team, error: teamError } = await supabaseAdmin
-      .from('Team')
+      .from('teams')
       .insert({
         firstName: validatedData.team.firstName,
         lastName: validatedData.team.lastName,
@@ -154,7 +154,7 @@ export async function POST(request: NextRequest) {
     ]
 
     const { error: membersError } = await supabaseAdmin
-      .from('TeamMember')
+      .from('team_members')
       .insert(membersToCreate)
 
     if (membersError) {
@@ -169,7 +169,7 @@ export async function POST(request: NextRequest) {
     }))
 
     const { error: preferencesError } = await supabaseAdmin
-      .from('TeamPreference')
+      .from('team_preferences')
       .insert(preferencesToCreate)
 
     if (preferencesError) {
@@ -205,17 +205,17 @@ export async function POST(request: NextRequest) {
 export async function GET() {
   try {
     const { data: teams, error } = await supabaseAdmin
-      .from('Team')
+      .from('teams')
       .select(`
         *,
-        members:TeamMember(*),
-        preferences:TeamPreference(
+        members:team_members(*),
+        preferences:team_preferences(
           *,
-          timeslot:Timeslot(*)
+          timeslot:timeslots(*)
         ),
-        assignments:TeamAssignment(
+        assignments:assignments(
           *,
-          timeslot:Timeslot(*)
+          timeslot:timeslots(*)
         )
       `)
       .order('createdAt', { ascending: false })
