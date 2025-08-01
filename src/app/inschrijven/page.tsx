@@ -8,6 +8,7 @@ import Link from 'next/link'
 import { completeRegistrationSchema } from '@/lib/validations'
 import { formatTimeslot, DAYS_OF_WEEK, TIME_SLOTS } from '@/lib/utils'
 import { z } from 'zod'
+import toast from 'react-hot-toast'
 
 type FormData = z.infer<typeof completeRegistrationSchema>
 
@@ -86,6 +87,9 @@ export default function InschrijvenPage() {
 
   const onSubmit = async (data: FormData) => {
     setIsLoading(true)
+    
+    const loadingToast = toast.loading('Bezig met inschrijven...')
+    
     try {
       const response = await fetch('/api/registrations', {
         method: 'POST',
@@ -93,14 +97,21 @@ export default function InschrijvenPage() {
         body: JSON.stringify(data)
       })
 
+      const result = await response.json()
+      
       if (response.ok) {
+        toast.dismiss(loadingToast)
+        toast.success('Inschrijving succesvol! Je ontvangt een bevestigingsmail.', {
+          duration: 5000,
+        })
         setStep(4) // Success step
       } else {
-        const error = await response.json()
-        alert(`Fout: ${error.message}`)
+        toast.dismiss(loadingToast)
+        toast.error(result.error || 'Er is een fout opgetreden bij de inschrijving')
       }
     } catch (error) {
-      alert('Er is een fout opgetreden. Probeer het opnieuw.')
+      toast.dismiss(loadingToast)
+      toast.error('Er is een fout opgetreden. Probeer het opnieuw.')
       console.error('Error submitting registration:', error)
     } finally {
       setIsLoading(false)
@@ -236,7 +247,10 @@ export default function InschrijvenPage() {
 
                     <div>
                       <div className="flex items-center justify-between mb-4">
-                        <label className="block text-base font-bold text-gray-900">Teamleden (1-3 extra spelers)</label>
+                        <div>
+                          <label className="block text-base font-bold text-gray-900">Teamleden (1-3 extra spelers)</label>
+                          <p className="text-sm text-gray-600 mt-1">E-mailadressen zijn optioneel voor teamleden</p>
+                        </div>
                         {fields.length < 3 && (
                           <button
                             type="button"
@@ -270,7 +284,7 @@ export default function InschrijvenPage() {
                               <input
                                 {...register(`team.members.${index}.email`)}
                                 type="email"
-                                placeholder="E-mail"
+                                placeholder="E-mail (optioneel)"
                                 className="flex-1 p-2 border-2 border-gray-300 rounded focus:ring-2 focus:ring-green-500 focus:border-transparent font-medium text-gray-900 placeholder-gray-500"
                               />
                               <button
