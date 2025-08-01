@@ -11,14 +11,11 @@ export default function Home() {
             <Image
               src="/ltc-de-kei-logo.svg"
               alt="LTC de Kei Logo"
-              width={200}
-              height={100}
+              width={300}
+              height={150}
               className="mx-auto"
             />
           </div>
-          <h1 className="text-5xl font-bold text-gray-900 mb-6">
-            {process.env.NEXT_PUBLIC_CLUB_NAME || "Padel Club"}
-          </h1>
           <p className="text-xl text-gray-900 font-medium mb-8 max-w-2xl mx-auto">
             Inschrijven voor wekelijkse padellessen. Selecteer je voorkeurtijden en laat de loting bepalen wanneer je speelt!
           </p>
