@@ -5,7 +5,7 @@ export async function GET() {
   try {
     // Check if timeslots exist, create them if they don't
     const { count } = await supabaseAdmin
-      .from('Timeslot')
+      .from('timeslot')
       .select('*', { count: 'exact', head: true })
     
     if (count === 0) {
@@ -29,7 +29,7 @@ export async function GET() {
       }
       
       const { error: insertError } = await supabaseAdmin
-        .from('Timeslot')
+        .from('timeslot')
         .insert(timeSlotsToCreate)
         
       if (insertError) {
@@ -39,7 +39,7 @@ export async function GET() {
 
     // Get timeslots with preference counts
     const { data: timeslots, error } = await supabaseAdmin
-      .from('Timeslot')
+      .from('timeslot')
       .select(`
         id,
         dayOfWeek,
@@ -47,7 +47,7 @@ export async function GET() {
         endTime,
         maxTeams,
         isActive,
-        TeamPreference(*)
+        teampreference(*)
       `)
       .eq('isActive', true)
       .order('dayOfWeek', { ascending: true })
@@ -65,7 +65,7 @@ export async function GET() {
       endTime: timeslot.endTime,
       maxTeams: timeslot.maxTeams,
       isActive: timeslot.isActive,
-      preferenceCount: Array.isArray(timeslot.TeamPreference) ? timeslot.TeamPreference.length : 0
+      preferenceCount: Array.isArray(timeslot.teampreference) ? timeslot.teampreference.length : 0
     })) || []
 
     return NextResponse.json(timeslotsWithCounts)
