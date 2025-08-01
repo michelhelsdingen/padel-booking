@@ -308,7 +308,7 @@ export default function InschrijvenPage() {
                     <button
                       type="button"
                       onClick={async () => {
-                        const isValid = await trigger(['team.firstName', 'team.lastName', 'team.contactEmail', 'team.members'])
+                        const isValid = await trigger(['team.firstName', 'team.lastName', 'team.contactEmail'])
                         if (isValid) {
                           setStep(2)
                         }
