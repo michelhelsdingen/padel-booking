@@ -63,7 +63,8 @@ export async function POST(request: NextRequest) {
       // Create team
       const team = await tx.team.create({
         data: {
-          name: validatedData.team.teamName,
+          firstName: validatedData.team.firstName,
+          lastName: validatedData.team.lastName,
           contactEmail: validatedData.team.contactEmail,
           memberCount: validatedData.team.members.length + 1, // +1 for the contact person
         }
@@ -75,13 +76,15 @@ export async function POST(request: NextRequest) {
           // Add contact person as first member
           {
             teamId: team.id,
-            name: "Contactpersoon", // We don't have the contact person's name in the form
+            firstName: validatedData.team.firstName,
+            lastName: validatedData.team.lastName,
             email: validatedData.team.contactEmail
           },
           // Add other members
           ...validatedData.team.members.map(member => ({
             teamId: team.id,
-            name: member.name,
+            firstName: member.firstName,
+            lastName: member.lastName,
             email: member.email
           }))
         ]

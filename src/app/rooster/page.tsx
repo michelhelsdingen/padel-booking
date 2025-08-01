@@ -151,13 +151,17 @@ export default function RoosterPage() {
                     {DAYS_OF_WEEK[day as keyof typeof DAYS_OF_WEEK]}
                   </h2>
                   
-                  <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-                    {['13:30', '15:30', '17:30', '19:30'].map(startTime => {
+                  <div className="grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-4">
+                    {['13:30', '14:30', '15:30', '16:30', '17:30', '18:30', '19:30', '20:30'].map(startTime => {
                       const key = `${day}-${startTime}`
                       const sessionAssignments = scheduleByDay[key] || []
-                      const endTime = startTime === '13:30' ? '15:30' : 
-                                     startTime === '15:30' ? '17:30' :
-                                     startTime === '17:30' ? '19:30' : '21:30'
+                      const endTime = startTime === '13:30' ? '14:30' : 
+                                     startTime === '14:30' ? '15:30' :
+                                     startTime === '15:30' ? '16:30' :
+                                     startTime === '16:30' ? '17:30' :
+                                     startTime === '17:30' ? '18:30' :
+                                     startTime === '18:30' ? '19:30' :
+                                     startTime === '19:30' ? '20:30' : '21:30'
 
                       return (
                         <div key={startTime} className="bg-gray-50 rounded-lg p-4">

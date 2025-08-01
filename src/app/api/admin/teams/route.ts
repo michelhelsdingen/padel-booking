@@ -7,7 +7,8 @@ export async function GET() {
       include: {
         members: {
           select: {
-            name: true,
+            firstName: true,
+            lastName: true,
             email: true
           }
         },

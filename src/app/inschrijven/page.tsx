@@ -34,9 +34,10 @@ export default function InschrijvenPage() {
     resolver: zodResolver(completeRegistrationSchema),
     defaultValues: {
       team: {
-        teamName: '',
+        firstName: '',
+        lastName: '',
         contactEmail: '',
-        members: [{ name: '', email: '' }]
+        members: [{ firstName: '', lastName: '', email: '' }]
       },
       preferences: {
         preferences: []
@@ -170,19 +171,38 @@ export default function InschrijvenPage() {
             <form onSubmit={handleSubmit(onSubmit)}>
               {step === 1 && (
                 <div>
-                  <h2 className="text-2xl font-bold text-gray-900 mb-6">Stap 1: Team Informatie</h2>
+                  <h2 className="text-2xl font-bold text-gray-900 mb-6">Stap 1: Persoonlijke Gegevens</h2>
+                  
+                  <div className="mb-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
+                    <p className="text-blue-900 font-medium">
+                      💡 <strong>Per team hoeft maar 1 speler zich op te geven.</strong> Je kunt daarna teamgenoten toevoegen.
+                    </p>
+                  </div>
                   
                   <div className="space-y-4">
-                    <div>
-                      <label className="block text-base font-bold text-gray-900 mb-2">Teamnaam *</label>
-                      <input
-                        {...register('team.teamName')}
-                        className="w-full p-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent font-medium text-gray-900 placeholder-gray-500"
-                        placeholder="Bijv. Team Awesome"
-                      />
-                      {errors.team?.teamName && (
-                        <p className="text-red-500 text-sm mt-1">{errors.team.teamName.message}</p>
-                      )}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-base font-bold text-gray-900 mb-2">Voornaam *</label>
+                        <input
+                          {...register('team.firstName')}
+                          className="w-full p-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent font-medium text-gray-900 placeholder-gray-500"
+                          placeholder="Je voornaam"
+                        />
+                        {errors.team?.firstName && (
+                          <p className="text-red-600 font-semibold text-sm mt-1">{errors.team.firstName.message}</p>
+                        )}
+                      </div>
+                      <div>
+                        <label className="block text-base font-bold text-gray-900 mb-2">Achternaam *</label>
+                        <input
+                          {...register('team.lastName')}
+                          className="w-full p-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent font-medium text-gray-900 placeholder-gray-500"
+                          placeholder="Je achternaam"
+                        />
+                        {errors.team?.lastName && (
+                          <p className="text-red-600 font-semibold text-sm mt-1">{errors.team.lastName.message}</p>
+                        )}
+                      </div>
                     </div>
 
                     <div>
@@ -204,7 +224,7 @@ export default function InschrijvenPage() {
                         {fields.length < 3 && (
                           <button
                             type="button"
-                            onClick={() => append({ name: '', email: '' })}
+                            onClick={() => append({ firstName: '', lastName: '', email: '' })}
                             className="flex items-center text-green-600 hover:text-green-700"
                           >
                             <Plus className="w-4 h-4 mr-1" />
@@ -215,29 +235,36 @@ export default function InschrijvenPage() {
 
                       <div className="space-y-3">
                         {fields.map((field, index) => (
-                          <div key={field.id} className="flex gap-3 p-3 bg-gray-50 rounded-lg">
-                            <div className="flex-1">
+                          <div key={field.id} className="grid grid-cols-1 md:grid-cols-3 gap-3 p-3 bg-gray-50 rounded-lg">
+                            <div>
                               <input
-                                {...register(`team.members.${index}.name`)}
-                                placeholder="Naam"
+                                {...register(`team.members.${index}.firstName`)}
+                                placeholder="Voornaam"
                                 className="w-full p-2 border-2 border-gray-300 rounded focus:ring-2 focus:ring-green-500 focus:border-transparent font-medium text-gray-900 placeholder-gray-500"
                               />
                             </div>
-                            <div className="flex-1">
+                            <div>
+                              <input
+                                {...register(`team.members.${index}.lastName`)}
+                                placeholder="Achternaam"
+                                className="w-full p-2 border-2 border-gray-300 rounded focus:ring-2 focus:ring-green-500 focus:border-transparent font-medium text-gray-900 placeholder-gray-500"
+                              />
+                            </div>
+                            <div className="flex gap-2">
                               <input
                                 {...register(`team.members.${index}.email`)}
                                 type="email"
                                 placeholder="E-mail"
-                                className="w-full p-2 border-2 border-gray-300 rounded focus:ring-2 focus:ring-green-500 focus:border-transparent font-medium text-gray-900 placeholder-gray-500"
+                                className="flex-1 p-2 border-2 border-gray-300 rounded focus:ring-2 focus:ring-green-500 focus:border-transparent font-medium text-gray-900 placeholder-gray-500"
                               />
+                              <button
+                                type="button"
+                                onClick={() => remove(index)}
+                                className="text-red-500 hover:text-red-700 p-2"
+                              >
+                                <Minus className="w-4 h-4" />
+                              </button>
                             </div>
-                            <button
-                              type="button"
-                              onClick={() => remove(index)}
-                              className="text-red-500 hover:text-red-700"
-                            >
-                              <Minus className="w-4 h-4" />
-                            </button>
                           </div>
                         ))}
                       </div>
@@ -341,7 +368,7 @@ export default function InschrijvenPage() {
                   <div className="space-y-6">
                     <div className="bg-gray-50 p-4 rounded-lg">
                       <h3 className="font-bold text-lg text-gray-900 mb-2">Team Informatie</h3>
-                      <p><strong>Naam:</strong> {watch('team.teamName')}</p>
+                      <p><strong>Naam:</strong> {watch('team.firstName')} {watch('team.lastName')}</p>
                       <p><strong>Contact:</strong> {watch('team.contactEmail')}</p>
                       <p><strong>Aantal leden:</strong> {fields.length + 1}</p>
                     </div>

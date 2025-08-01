@@ -14,10 +14,14 @@ export const DAYS_OF_WEEK = {
 } as const
 
 export const TIME_SLOTS = [
-  { start: '13:30', end: '15:30', label: '13:30 - 15:30' },
-  { start: '15:30', end: '17:30', label: '15:30 - 17:30' },
-  { start: '17:30', end: '19:30', label: '17:30 - 19:30' },
-  { start: '19:30', end: '21:30', label: '19:30 - 21:30' }
+  { start: '13:30', end: '14:30', label: '13:30 - 14:30' },
+  { start: '14:30', end: '15:30', label: '14:30 - 15:30' },
+  { start: '15:30', end: '16:30', label: '15:30 - 16:30' },
+  { start: '16:30', end: '17:30', label: '16:30 - 17:30' },
+  { start: '17:30', end: '18:30', label: '17:30 - 18:30' },
+  { start: '18:30', end: '19:30', label: '18:30 - 19:30' },
+  { start: '19:30', end: '20:30', label: '19:30 - 20:30' },
+  { start: '20:30', end: '21:30', label: '20:30 - 21:30' }
 ] as const
 
 export function formatTimeslot(dayOfWeek: number, startTime: string, endTime: string) {

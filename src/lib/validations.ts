@@ -1,12 +1,14 @@
 import { z } from 'zod'
 
 export const teamMemberSchema = z.object({
-  name: z.string().min(2, 'Naam moet minimaal 2 karakters bevatten'),
+  firstName: z.string().min(2, 'Voornaam moet minimaal 2 karakters bevatten'),
+  lastName: z.string().min(2, 'Achternaam moet minimaal 2 karakters bevatten'),
   email: z.string().email('Ongeldig e-mailadres')
 })
 
 export const teamRegistrationSchema = z.object({
-  teamName: z.string().min(2, 'Teamnaam moet minimaal 2 karakters bevatten'),
+  firstName: z.string().min(2, 'Voornaam moet minimaal 2 karakters bevatten'),
+  lastName: z.string().min(2, 'Achternaam moet minimaal 2 karakters bevatten'),
   contactEmail: z.string().email('Ongeldig e-mailadres'),
   members: z.array(teamMemberSchema)
     .min(1, 'Voeg minimaal 1 teamlid toe')

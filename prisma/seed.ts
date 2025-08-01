@@ -10,10 +10,14 @@ async function main() {
   
   for (let day = 1; day <= 5; day++) {
     const daySlots = [
-      { startTime: '13:30', endTime: '15:30' },
-      { startTime: '15:30', endTime: '17:30' },
-      { startTime: '17:30', endTime: '19:30' },
-      { startTime: '19:30', endTime: '21:30' }
+      { startTime: '13:30', endTime: '14:30' },
+      { startTime: '14:30', endTime: '15:30' },
+      { startTime: '15:30', endTime: '16:30' },
+      { startTime: '16:30', endTime: '17:30' },
+      { startTime: '17:30', endTime: '18:30' },
+      { startTime: '18:30', endTime: '19:30' },
+      { startTime: '19:30', endTime: '20:30' },
+      { startTime: '20:30', endTime: '21:30' }
     ]
     
     for (const slot of daySlots) {
@@ -21,7 +25,7 @@ async function main() {
         dayOfWeek: day,
         startTime: slot.startTime,
         endTime: slot.endTime,
-        maxTeams: 4
+        maxTeams: 5
       })
     }
   }

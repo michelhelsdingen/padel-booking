@@ -12,7 +12,8 @@ datasource db {
 
 model Team {
   id           String   @id @default(cuid())
-  name         String
+  firstName    String
+  lastName     String
   contactEmail String   @unique
   memberCount  Int
   createdAt    DateTime @default(now())
@@ -26,10 +27,11 @@ model Team {
 }
 
 model TeamMember {
-  id     String @id @default(cuid())
-  teamId String
-  name   String
-  email  String
+  id        String @id @default(cuid())
+  teamId    String
+  firstName String
+  lastName  String
+  email     String
 
   team Team @relation(fields: [teamId], references: [id], onDelete: Cascade)
 
@@ -40,8 +42,8 @@ model Timeslot {
   id        String @id @default(cuid())
   dayOfWeek Int // 1=Monday, 5=Friday
   startTime String // "13:30"
-  endTime   String // "15:30"
-  maxTeams  Int    @default(4)
+  endTime   String // "14:30"
+  maxTeams  Int    @default(5)
   isActive  Boolean @default(true)
 
   preferences TeamPreference[]

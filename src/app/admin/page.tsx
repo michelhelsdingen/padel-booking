@@ -6,12 +6,14 @@ import { formatTimeslot, DAYS_OF_WEEK } from '@/lib/utils'
 
 interface Team {
   id: string
-  name: string
+  firstName: string
+  lastName: string
   contactEmail: string
   memberCount: number
   createdAt: string
   members: Array<{
-    name: string
+    firstName: string
+    lastName: string
     email: string
   }>
   preferences: Array<{
@@ -34,15 +36,18 @@ interface LotteryStats {
 }
 
 export default function AdminPage() {
-  const [activeTab, setActiveTab] = useState<'overview' | 'teams' | 'lottery' | 'settings'>('overview')
+  const [activeTab, setActiveTab] = useState<'overview' | 'teams' | 'lottery' | 'timeslots' | 'settings'>('overview')
   const [teams, setTeams] = useState<Team[]>([])
   const [lotteryStats, setLotteryStats] = useState<LotteryStats | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   const [isRunningLottery, setIsRunningLottery] = useState(false)
+  const [timeslots, setTimeslots] = useState<any[]>([])
+  const [isUpdatingTimeslot, setIsUpdatingTimeslot] = useState(false)
 
   useEffect(() => {
     loadTeams()
     loadLotteryStats()
+    loadTimeslots()
   }, [])
 
   const loadTeams = async () => {
@@ -93,6 +98,40 @@ export default function AdminPage() {
     }
   }
 
+  const loadTimeslots = async () => {
+    try {
+      const response = await fetch('/api/admin/timeslots')
+      if (response.ok) {
+        const data = await response.json()
+        setTimeslots(data)
+      }
+    } catch (err) {
+      console.error('Error loading timeslots:', err)
+    }
+  }
+
+  const toggleTimeslot = async (timeslotId: string, isActive: boolean) => {
+    setIsUpdatingTimeslot(true)
+    try {
+      const response = await fetch('/api/admin/timeslots', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ timeslotId, isActive })
+      })
+
+      if (response.ok) {
+        loadTimeslots() // Reload to get updated data
+      } else {
+        const error = await response.json()
+        alert(`Fout: ${error.message}`)
+      }
+    } catch (err) {
+      alert('Er is een fout opgetreden')
+    } finally {
+      setIsUpdatingTimeslot(false)
+    }
+  }
+
   const sendNotifications = async () => {
     if (!confirm('Weet je zeker dat je alle notificaties wilt versturen?')) {
       return
@@ -136,13 +175,14 @@ export default function AdminPage() {
               { id: 'overview', label: 'Overzicht', icon: BarChart3 },
               { id: 'teams', label: 'Teams', icon: Users },
               { id: 'lottery', label: 'Loting', icon: Play },
+              { id: 'timeslots', label: 'Tijdsloten', icon: Calendar },
               { id: 'settings', label: 'Instellingen', icon: Settings }
             ].map(tab => {
               const Icon = tab.icon
               return (
                 <button
                   key={tab.id}
-                  onClick={() => setActiveTab(tab.id as 'overview' | 'teams' | 'lottery' | 'settings')}
+                  onClick={() => setActiveTab(tab.id as 'overview' | 'teams' | 'lottery' | 'timeslots' | 'settings')}
                   className={`flex items-center space-x-2 py-4 border-b-2 transition-colors ${
                     activeTab === tab.id
                       ? 'border-blue-500 text-blue-600'
@@ -235,7 +275,7 @@ export default function AdminPage() {
                   {teams.map(team => (
                     <tr key={team.id} className="hover:bg-gray-50">
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="font-bold text-gray-900">{team.name}</div>
+                        <div className="font-bold text-gray-900">{team.firstName} {team.lastName}</div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="text-sm font-medium text-gray-900">{team.contactEmail}</div>
@@ -320,6 +360,81 @@ export default function AdminPage() {
                   </div>
                 </div>
               )}
+            </div>
+          </div>
+        )}
+
+        {activeTab === 'timeslots' && (
+          <div className="bg-white rounded-lg shadow p-6">
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-2xl font-bold text-gray-900">Tijdslot Beheer</h2>
+              <button
+                onClick={loadTimeslots}
+                className="flex items-center space-x-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors"
+              >
+                <RefreshCw className="h-4 w-4" />
+                <span>Ververs</span>
+              </button>
+            </div>
+
+            <div className="grid gap-6">
+              {[1, 2, 3, 4, 5].map(day => (
+                <div key={day} className="border rounded-lg p-4">
+                  <h3 className="font-bold text-xl text-gray-900 mb-4">
+                    {DAYS_OF_WEEK[day as keyof typeof DAYS_OF_WEEK]}
+                  </h3>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
+                    {timeslots
+                      .filter(slot => slot.dayOfWeek === day)
+                      .map(slot => (
+                        <div 
+                          key={slot.id} 
+                          className={`p-4 rounded-lg border-2 transition-colors ${
+                            slot.isActive 
+                              ? slot._count.preferences >= 5 
+                                ? 'bg-orange-50 border-orange-300' 
+                                : 'bg-green-50 border-green-300'
+                              : 'bg-gray-100 border-gray-300'
+                          }`}
+                        >
+                          <div className="text-center">
+                            <p className="font-bold text-gray-900">
+                              {slot.startTime} - {slot.endTime}
+                            </p>
+                            <p className="text-sm text-gray-700 mt-1">
+                              {slot._count.preferences} inschrijvingen
+                            </p>
+                            <p className="text-sm text-gray-700">
+                              {slot._count.assignments} toegewezen
+                            </p>
+                            
+                            <button
+                              onClick={() => toggleTimeslot(slot.id, !slot.isActive)}
+                              disabled={isUpdatingTimeslot}
+                              className={`mt-2 px-3 py-1 text-xs rounded transition-colors ${
+                                slot.isActive
+                                  ? 'bg-red-600 hover:bg-red-700 text-white'
+                                  : 'bg-green-600 hover:bg-green-700 text-white'
+                              } disabled:bg-gray-400`}
+                            >
+                              {slot.isActive ? 'Deactiveren' : 'Activeren'}
+                            </button>
+                          </div>
+                        </div>
+                      ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <div className="mt-6 p-4 bg-blue-50 rounded-lg">
+              <h3 className="font-bold text-blue-900 mb-2">Legenda</h3>
+              <div className="text-sm text-blue-800 space-y-1">
+                <p><span className="inline-block w-4 h-4 bg-green-300 rounded mr-2"></span>Actief tijdslot</p>
+                <p><span className="inline-block w-4 h-4 bg-orange-300 rounded mr-2"></span>Vol (5+ inschrijvingen)</p>
+                <p><span className="inline-block w-4 h-4 bg-gray-300 rounded mr-2"></span>Gedeactiveerd tijdslot</p>
+              </div>
             </div>
           </div>
         )}
