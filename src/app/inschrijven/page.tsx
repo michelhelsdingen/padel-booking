@@ -81,10 +81,22 @@ export default function InschrijvenPage() {
 
   const preferences = watch('preferences.preferences') || []
 
+  // State for email debounce timeout
+  const [emailTimeout, setEmailTimeout] = useState<NodeJS.Timeout | null>(null)
+
   // Load timeslots on component mount
   useEffect(() => {
     loadTimeslots()
   }, [])
+
+  // Cleanup email timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (emailTimeout) {
+        clearTimeout(emailTimeout)
+      }
+    }
+  }, [emailTimeout])
 
   const loadTimeslots = async () => {
     try {
@@ -246,26 +258,21 @@ export default function InschrijvenPage() {
     }
   }
 
-  // Simple debounce function
-  const debounce = <T extends unknown[]>(func: (...args: T) => void, wait: number) => {
-    let timeout: NodeJS.Timeout
-    return (...args: T) => {
-      clearTimeout(timeout)
-      timeout = setTimeout(() => func(...args), wait)
-    }
-  }
-
   // Memoize checkEmailAvailability
   const memoizedCheckEmailAvailability = useCallback(checkEmailAvailability, [])
   
-  // Debounced email check
-  const debouncedEmailCheck = useCallback(
-    (email: string) => {
-      const debouncedFn = debounce((email: string) => memoizedCheckEmailAvailability(email), 1000)
-      debouncedFn(email)
-    },
-    [memoizedCheckEmailAvailability]
-  )
+  // Create debounced email check with useCallback
+  const debouncedEmailCheck = useCallback((email: string) => {
+    if (emailTimeout) {
+      clearTimeout(emailTimeout)
+    }
+    
+    const newTimeout = setTimeout(() => {
+      memoizedCheckEmailAvailability(email)
+    }, 1000)
+    
+    setEmailTimeout(newTimeout)
+  }, [emailTimeout, memoizedCheckEmailAvailability])
 
   // Send edit code
   const sendEditCode = async (email: string) => {
