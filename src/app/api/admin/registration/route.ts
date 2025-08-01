@@ -49,7 +49,7 @@ export async function POST() {
 export async function GET() {
   try {
     const periods = await prisma.registrationPeriod.findMany({
-      orderBy: { createdAt: 'desc' }
+      orderBy: { registrationStart: 'desc' }
     })
 
     return NextResponse.json(periods)
