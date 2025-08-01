@@ -3,6 +3,7 @@ import { supabaseAdmin } from '@/lib/supabase'
 import { completeRegistrationSchema } from '@/lib/validations'
 import { sendConfirmationEmail } from '@/lib/email'
 import { z } from 'zod'
+import { v4 as uuidv4 } from 'uuid'
 
 export async function POST(request: NextRequest) {
   try {
@@ -123,10 +124,12 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Create team
+    // Create team with generated UUID
+    const teamId = uuidv4()
     const { data: team, error: teamError } = await supabaseAdmin
       .from('teams')
       .insert({
+        id: teamId,
         firstName: validatedData.team.firstName,
         lastName: validatedData.team.lastName,
         contactEmail: validatedData.team.contactEmail,
@@ -143,6 +146,7 @@ export async function POST(request: NextRequest) {
     const membersToCreate = [
       // Add contact person as first member
       {
+        id: uuidv4(),
         teamId: team.id,
         firstName: validatedData.team.firstName,
         lastName: validatedData.team.lastName,
@@ -150,6 +154,7 @@ export async function POST(request: NextRequest) {
       },
       // Add other members
       ...validatedData.team.members.map(member => ({
+        id: uuidv4(),
         teamId: team.id,
         firstName: member.firstName,
         lastName: member.lastName,
@@ -167,6 +172,7 @@ export async function POST(request: NextRequest) {
 
     // Create preferences
     const preferencesToCreate = validatedData.preferences.preferences.map(pref => ({
+      id: uuidv4(),
       teamId: team.id,
       timeslotId: pref.timeslotId,
       priority: pref.priority
