@@ -98,8 +98,12 @@ export default function InschrijvenPage() {
         body: JSON.stringify(data)
       })
 
+      console.log('Response status:', response.status)
+      console.log('Response ok:', response.ok)
+      
       if (response.ok) {
         const result = await response.json()
+        console.log('Success result:', result)
         toast.dismiss(loadingToast)
         toast.success('Inschrijving succesvol! Je ontvangt een bevestigingsmail.', {
           duration: 5000,
@@ -111,7 +115,11 @@ export default function InschrijvenPage() {
         // Try to parse JSON error, but handle HTML error pages
         let errorMessage = 'Er is een fout opgetreden bij de inschrijving'
         try {
-          const result = await response.json()
+          const responseText = await response.text()
+          console.log('Raw error response:', responseText)
+          
+          // Try to parse as JSON
+          const result = JSON.parse(responseText)
           console.error('API Error:', result)
           errorMessage = result.error || errorMessage
           if (result.details) {
@@ -119,6 +127,7 @@ export default function InschrijvenPage() {
           }
         } catch (e) {
           console.error('Failed to parse error response:', e)
+          console.error('Response was not valid JSON')
         }
         
         toast.error(errorMessage)
@@ -386,6 +395,7 @@ export default function InschrijvenPage() {
                               <button
                                 key={timeslot.id}
                                 type="button"
+                                data-testid="timeslot-button"
                                 onClick={() => handleTimeslotToggle(timeslot.id)}
                                 className={`p-3 rounded-lg border-2 text-left transition-colors ${
                                   isSelected
