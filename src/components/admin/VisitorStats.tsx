@@ -8,6 +8,11 @@ interface VisitorData {
   activeVisitors: number
   todayVisitors: number
   avgSessionDuration: number
+  pageBreakdown?: {
+    home: number
+    signup: number
+    [key: string]: number
+  }
 }
 
 export default function VisitorStats() {
@@ -113,6 +118,22 @@ export default function VisitorStats() {
           </div>
         </div>
       </div>
+      
+      {visitorData.pageBreakdown && (
+        <div className="mt-4 pt-4 border-t border-gray-200">
+          <h4 className="text-sm font-medium text-gray-700 mb-2">Active by Page:</h4>
+          <div className="flex space-x-4">
+            <div className="text-sm">
+              <span className="text-gray-600">Home:</span>
+              <span className="ml-1 font-semibold text-blue-600">{visitorData.pageBreakdown.home || 0}</span>
+            </div>
+            <div className="text-sm">
+              <span className="text-gray-600">Sign-up:</span>
+              <span className="ml-1 font-semibold text-green-600">{visitorData.pageBreakdown.signup || 0}</span>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

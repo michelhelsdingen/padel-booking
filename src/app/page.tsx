@@ -1,10 +1,12 @@
 import Link from "next/link"
 import Image from "next/image"
 import { Calendar, Clock, Users, Trophy } from "lucide-react"
+import VisitorTracker from "@/components/VisitorTracker"
 
 export default function Home() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50">
+      <VisitorTracker page="home" />
       <div className="container mx-auto px-4 py-16">
         <div className="text-center mb-16">
           <div className="mb-6">

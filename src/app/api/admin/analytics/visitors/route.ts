@@ -1,62 +1,43 @@
 import { NextResponse } from 'next/server'
-
-// Simple in-memory storage for visitor tracking
-const visitorStats = {
-  totalVisitors: 0,
-  todayVisitors: 0,
-  lastUpdate: new Date().toISOString().split('T')[0],
-  activeVisitors: 1,
-  lastActivity: Date.now(),
-  avgSessionDuration: 245 // Fixed session duration
-}
+import { visitorTracker } from '@/lib/visitor-tracker'
 
 export async function GET() {
   try {
-    const now = new Date()
-    const today = now.toISOString().split('T')[0]
+    const stats = visitorTracker.getStats()
     
-    // Reset daily counter if it's a new day
-    if (visitorStats.lastUpdate !== today) {
-      visitorStats.todayVisitors = 0
-      visitorStats.lastUpdate = today
-    }
-    
-    // Increment visitor count
-    visitorStats.totalVisitors += 1
-    visitorStats.todayVisitors += 1
-    
-    // Update active visitors count (slowly increment over time)
-    const hoursSinceStart = Math.floor((Date.now() - visitorStats.lastActivity) / (1000 * 60 * 60))
-    if (hoursSinceStart > 0) {
-      visitorStats.activeVisitors = Math.min(visitorStats.activeVisitors + 1, 5)
-    }
-    visitorStats.lastActivity = Date.now()
-    
-    // Gradually increase session duration over time
-    if (visitorStats.totalVisitors > 0 && visitorStats.totalVisitors % 10 === 0) {
-      visitorStats.avgSessionDuration = Math.min(visitorStats.avgSessionDuration + 5, 420) // Max 7 minutes
-    }
+    // Get page-specific breakdowns
+    const homeVisitors = visitorTracker.getActiveSessionsByPage('home')
+    const signupVisitors = visitorTracker.getActiveSessionsByPage('signup')
     
     const responseData = {
-      totalVisitors: Math.min(visitorStats.totalVisitors, 2500), // Cap at reasonable number
-      activeVisitors: visitorStats.activeVisitors,
-      todayVisitors: Math.min(visitorStats.todayVisitors, 150), // Cap daily visitors
-      avgSessionDuration: visitorStats.avgSessionDuration
+      totalVisitors: stats.totalVisitors,
+      activeVisitors: stats.activeVisitors,
+      todayVisitors: stats.todayVisitors,
+      avgSessionDuration: stats.avgSessionDuration,
+      pageBreakdown: {
+        home: homeVisitors,
+        signup: signupVisitors,
+        ...stats.pageBreakdown
+      }
     }
     
-    console.log('Visitor stats:', responseData)
+    console.log('Real visitor stats:', responseData)
     
     return NextResponse.json(responseData)
     
   } catch (error) {
-    console.error('Error in visitor stats:', error)
+    console.error('Error fetching real visitor stats:', error)
     
-    // Fallback with more realistic numbers
+    // Fallback data
     return NextResponse.json({
-      totalVisitors: 847,
-      activeVisitors: 3,
-      todayVisitors: 23,
-      avgSessionDuration: 245
+      totalVisitors: 0,
+      activeVisitors: 0,
+      todayVisitors: 0,
+      avgSessionDuration: 0,
+      pageBreakdown: {
+        home: 0,
+        signup: 0
+      }
     })
   }
 }

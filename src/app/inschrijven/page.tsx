@@ -10,6 +10,7 @@ import { completeRegistrationSchema } from '@/lib/validations'
 import { formatTimeslot, DAYS_OF_WEEK, TIME_SLOTS } from '@/lib/utils'
 import { z } from 'zod'
 import toast from 'react-hot-toast'
+import VisitorTracker from '@/components/VisitorTracker'
 
 type FormData = z.infer<typeof completeRegistrationSchema>
 
@@ -369,6 +370,7 @@ export default function InschrijvenPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50">
+      <VisitorTracker page="signup" />
       <div className="container mx-auto px-4 py-8">
         <div className="max-w-2xl mx-auto">
           <div className="bg-white rounded-lg shadow-lg p-8">
