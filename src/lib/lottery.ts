@@ -6,7 +6,8 @@ interface TeamPreference {
   priority: number
   team: {
     id: string
-    name: string
+    firstName: string
+    lastName: string
     contactEmail: string
   }
   timeslot: {
@@ -39,7 +40,8 @@ export async function runLottery(): Promise<LotteryResult> {
       team: {
         select: {
           id: true,
-          name: true,
+          firstName: true,
+          lastName: true,
           contactEmail: true
         }
       },
@@ -194,7 +196,7 @@ export async function getLotteryStatistics() {
     prisma.team.count(),
     prisma.assignment.findMany({
       include: {
-        team: { select: { name: true, contactEmail: true } },
+        team: { select: { firstName: true, lastName: true, contactEmail: true } },
         timeslot: { select: { dayOfWeek: true, startTime: true, endTime: true } }
       }
     }),

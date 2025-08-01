@@ -64,8 +64,8 @@ export default function InschrijvenPage() {
         const data = await response.json()
         setTimeslots(data)
       }
-    } catch (err) {
-      console.error('Error loading timeslots:', err)
+    } catch (error) {
+      console.error('Error loading timeslots:', error)
     }
   }
 
@@ -84,8 +84,9 @@ export default function InschrijvenPage() {
         const error = await response.json()
         alert(`Fout: ${error.message}`)
       }
-    } catch (err) {
+    } catch (error) {
       alert('Er is een fout opgetreden. Probeer het opnieuw.')
+      console.error('Error submitting registration:', error)
     } finally {
       setIsLoading(false)
     }

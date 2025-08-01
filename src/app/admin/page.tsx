@@ -41,8 +41,20 @@ export default function AdminPage() {
   const [lotteryStats, setLotteryStats] = useState<LotteryStats | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   const [isRunningLottery, setIsRunningLottery] = useState(false)
-  const [timeslots, setTimeslots] = useState<any[]>([])
+  const [timeslots, setTimeslots] = useState<Array<{
+    id: string
+    dayOfWeek: number
+    startTime: string
+    endTime: string
+    isActive: boolean
+    _count: { preferences: number, assignments: number }
+  }>>([])
   const [isUpdatingTimeslot, setIsUpdatingTimeslot] = useState(false)
+  
+  // Modal states
+  const [showPeriodModal, setShowPeriodModal] = useState(false)
+  const [showTemplateModal, setShowTemplateModal] = useState(false)
+  const [showTimeslotConfigModal, setShowTimeslotConfigModal] = useState(false)
 
   useEffect(() => {
     loadTeams()
@@ -105,8 +117,8 @@ export default function AdminPage() {
         const data = await response.json()
         setTimeslots(data)
       }
-    } catch (err) {
-      console.error('Error loading timeslots:', err)
+    } catch (error) {
+      console.error('Error loading timeslots:', error)
     }
   }
 
@@ -125,8 +137,9 @@ export default function AdminPage() {
         const error = await response.json()
         alert(`Fout: ${error.message}`)
       }
-    } catch (err) {
+    } catch (error) {
       alert('Er is een fout opgetreden')
+      console.error('Error toggling timeslot:', error)
     } finally {
       setIsUpdatingTimeslot(false)
     }
@@ -150,6 +163,82 @@ export default function AdminPage() {
       alert('Er is een fout opgetreden bij het versturen van notificaties')
     } finally {
       setIsLoading(false)
+    }
+  }
+
+  // Modal handlers
+  const handlePeriodSave = async (periodData: {
+    name: string
+    registrationStart: string
+    registrationEnd: string
+    lotteryDate: string
+    description: string
+  }) => {
+    try {
+      const response = await fetch('/api/admin/settings/period', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(periodData)
+      })
+      
+      if (response.ok) {
+        alert('Periode succesvol opgeslagen!')
+        setShowPeriodModal(false)
+      } else {
+        const error = await response.json()
+        alert(`Fout: ${error.message}`)
+      }
+    } catch (error) {
+      alert('Er is een fout opgetreden bij het opslaan')
+    }
+  }
+
+  const handleTemplateSave = async (templateData: {
+    confirmation: { subject: string, body: string }
+    assignment: { subject: string, body: string }
+    waitlist: { subject: string, body: string }
+  }) => {
+    try {
+      const response = await fetch('/api/admin/settings/templates', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(templateData)
+      })
+      
+      if (response.ok) {
+        alert('Templates succesvol opgeslagen!')
+        setShowTemplateModal(false)
+      } else {
+        const error = await response.json()
+        alert(`Fout: ${error.message}`)
+      }
+    } catch (error) {
+      alert('Er is een fout opgetreden bij het opslaan')
+    }
+  }
+
+  const handleTimeslotConfigSave = async (configData: {
+    maxTeamsPerSlot: number
+    timeSlots: Array<{ startTime: string, endTime: string, enabled: boolean }>
+    activeDays: Record<number, boolean>
+  }) => {
+    try {
+      const response = await fetch('/api/admin/settings/timeslots', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(configData)
+      })
+      
+      if (response.ok) {
+        alert('Tijdslot configuratie succesvol opgeslagen!')
+        setShowTimeslotConfigModal(false)
+        loadTimeslots() // Refresh timeslots
+      } else {
+        const error = await response.json()
+        alert(`Fout: ${error.message}`)
+      }
+    } catch (error) {
+      alert('Er is een fout opgetreden bij het opslaan')
     }
   }
 
@@ -448,7 +537,10 @@ export default function AdminPage() {
                 <p className="text-base font-medium text-gray-900 mb-4">
                   Beheer wanneer teams zich kunnen inschrijven en wanneer de loting plaatsvindt.
                 </p>
-                <button className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors">
+                <button 
+                  onClick={() => setShowPeriodModal(true)}
+                  className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors"
+                >
                   Periode Bewerken
                 </button>
               </div>
@@ -458,7 +550,10 @@ export default function AdminPage() {
                 <p className="text-base font-medium text-gray-900 mb-4">
                   Pas de e-mail templates aan voor bevestigingen en notificaties.
                 </p>
-                <button className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors">
+                <button 
+                  onClick={() => setShowTemplateModal(true)}
+                  className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors"
+                >
                   Templates Bewerken
                 </button>
               </div>
@@ -468,13 +563,469 @@ export default function AdminPage() {
                 <p className="text-base font-medium text-gray-900 mb-4">
                   Beheer beschikbare tijdsloten en capaciteit per slot.
                 </p>
-                <button className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors">
+                <button 
+                  onClick={() => setShowTimeslotConfigModal(true)}
+                  className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors"
+                >
                   Tijdsloten Bewerken
                 </button>
               </div>
             </div>
           </div>
         )}
+
+        {/* Period Management Modal */}
+        {showPeriodModal && (
+          <PeriodModal 
+            onClose={() => setShowPeriodModal(false)}
+            onSave={handlePeriodSave}
+          />
+        )}
+
+        {/* Template Management Modal */}
+        {showTemplateModal && (
+          <TemplateModal 
+            onClose={() => setShowTemplateModal(false)}
+            onSave={handleTemplateSave}
+          />
+        )}
+
+        {/* Timeslot Configuration Modal */}
+        {showTimeslotConfigModal && (
+          <TimeslotConfigModal 
+            onClose={() => setShowTimeslotConfigModal(false)}
+            onSave={handleTimeslotConfigSave}
+          />
+        )}
+      </div>
+    </div>
+  )
+}
+
+// Period Management Modal Component
+function PeriodModal({ onClose, onSave }: { 
+  onClose: () => void
+  onSave: (data: {
+    name: string
+    registrationStart: string
+    registrationEnd: string
+    lotteryDate: string
+    description: string
+  }) => void 
+}) {
+  const [formData, setFormData] = useState({
+    name: '',
+    registrationStart: '',
+    registrationEnd: '',
+    lotteryDate: '',
+    description: ''
+  })
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault()
+    onSave(formData)
+  }
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+      <div className="bg-white rounded-lg p-6 w-full max-w-md max-h-[90vh] overflow-y-auto">
+        <div className="flex items-center justify-between mb-6">
+          <h3 className="text-xl font-bold text-gray-900">Inschrijfperiode Bewerken</h3>
+          <button
+            onClick={onClose}
+            className="text-gray-400 hover:text-gray-600"
+          >
+            ✕
+          </button>
+        </div>
+
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div>
+            <label className="block text-sm font-bold text-gray-900 mb-2">
+              Periode Naam
+            </label>
+            <input
+              type="text"
+              value={formData.name}
+              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              placeholder="Bijvoorbeeld: Week 1-10"
+              required
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-bold text-gray-900 mb-2">
+              Inschrijving Start
+            </label>
+            <input
+              type="datetime-local"
+              value={formData.registrationStart}
+              onChange={(e) => setFormData({ ...formData, registrationStart: e.target.value })}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              required
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-bold text-gray-900 mb-2">
+              Inschrijving Einde
+            </label>
+            <input
+              type="datetime-local"
+              value={formData.registrationEnd}
+              onChange={(e) => setFormData({ ...formData, registrationEnd: e.target.value })}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              required
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-bold text-gray-900 mb-2">
+              Loting Datum
+            </label>
+            <input
+              type="datetime-local"
+              value={formData.lotteryDate}
+              onChange={(e) => setFormData({ ...formData, lotteryDate: e.target.value })}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              required
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-bold text-gray-900 mb-2">
+              Beschrijving (optioneel)
+            </label>
+            <textarea
+              value={formData.description}
+              onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              rows={3}
+              placeholder="Extra informatie over deze periode"
+            />
+          </div>
+
+          <div className="flex space-x-4 pt-4">
+            <button
+              type="button"
+              onClick={onClose}
+              className="flex-1 px-4 py-2 text-gray-700 bg-gray-200 rounded-lg hover:bg-gray-300 transition-colors"
+            >
+              Annuleren
+            </button>
+            <button
+              type="submit"
+              className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+            >
+              Opslaan
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  )
+}
+
+// Template Management Modal Component
+function TemplateModal({ onClose, onSave }: { 
+  onClose: () => void
+  onSave: (data: {
+    confirmation: { subject: string, body: string }
+    assignment: { subject: string, body: string }
+    waitlist: { subject: string, body: string }
+  }) => void 
+}) {
+  const [activeTemplate, setActiveTemplate] = useState<'confirmation' | 'assignment' | 'waitlist'>('confirmation')
+  const [templates, setTemplates] = useState({
+    confirmation: {
+      subject: 'Bevestiging inschrijving LTC Padel Lessen',
+      body: `Beste {{firstName}} {{lastName}},
+
+Bedankt voor je inschrijving voor de padellessen bij LTC de Kei!
+
+Je hebt je ingeschreven met de volgende voorkeuren:
+{{preferences}}
+
+De loting vindt plaats op {{lotteryDate}} en je ontvangt dan bericht over de toewijzing.
+
+Met sportieve groet,
+LTC de Kei`
+    },
+    assignment: {
+      subject: 'Toewijzing padellessen LTC de Kei',
+      body: `Beste {{firstName}} {{lastName}},
+
+Goed nieuws! Je team is toegewezen aan het volgende tijdslot:
+{{assignment}}
+
+Datum: Elke {{dayOfWeek}}
+Tijd: {{timeSlot}}
+
+Zorg ervoor dat je op tijd aanwezig bent voor de lessen.
+
+Met sportieve groet,
+LTC de Kei`
+    },
+    waitlist: {
+      subject: 'Wachtlijst padellessen LTC de Kei',
+      body: `Beste {{firstName}} {{lastName}},
+
+Helaas konden we je team niet toewijzen aan een van je voorkeuren.
+Je staat nu op de wachtlijst en wordt op de hoogte gehouden als er plekken vrijkomen.
+
+Met sportieve groet,
+LTC de Kei`
+    }
+  })
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault()
+    onSave(templates)
+  }
+
+  const updateTemplate = (type: 'confirmation' | 'assignment' | 'waitlist', field: 'subject' | 'body', value: string) => {
+    setTemplates(prev => ({
+      ...prev,
+      [type]: {
+        ...prev[type],
+        [field]: value
+      }
+    }))
+  }
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+      <div className="bg-white rounded-lg p-6 w-full max-w-4xl max-h-[90vh] overflow-y-auto">
+        <div className="flex items-center justify-between mb-6">
+          <h3 className="text-xl font-bold text-gray-900">E-mail Templates Bewerken</h3>
+          <button
+            onClick={onClose}
+            className="text-gray-400 hover:text-gray-600"
+          >
+            ✕
+          </button>
+        </div>
+
+        <div className="flex space-x-4 mb-6">
+          {[
+            { id: 'confirmation', label: 'Bevestiging' },
+            { id: 'assignment', label: 'Toewijzing' },
+            { id: 'waitlist', label: 'Wachtlijst' }
+          ].map(template => (
+            <button
+              key={template.id}
+              onClick={() => setActiveTemplate(template.id as 'confirmation' | 'assignment' | 'waitlist')}
+              className={`px-4 py-2 rounded-lg transition-colors ${
+                activeTemplate === template.id
+                  ? 'bg-blue-600 text-white'
+                  : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+              }`}
+            >
+              {template.label}
+            </button>
+          ))}
+        </div>
+
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div>
+            <label className="block text-sm font-bold text-gray-900 mb-2">
+              Onderwerp
+            </label>
+            <input
+              type="text"
+              value={templates[activeTemplate].subject}
+              onChange={(e) => updateTemplate(activeTemplate, 'subject', e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-bold text-gray-900 mb-2">
+              Bericht
+            </label>
+            <textarea
+              value={templates[activeTemplate].body}
+              onChange={(e) => updateTemplate(activeTemplate, 'body', e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              rows={12}
+            />
+          </div>
+
+          <div className="bg-blue-50 p-4 rounded-lg">
+            <h4 className="font-bold text-blue-900 mb-2">Beschikbare variabelen:</h4>
+            <div className="text-sm text-blue-800 grid grid-cols-2 gap-2">
+              <div>{'{{firstName}}'} - Voornaam</div>
+              <div>{'{{lastName}}'} - Achternaam</div>
+              <div>{'{{preferences}}'} - Voorkeuren lijst</div>
+              <div>{'{{lotteryDate}}'} - Loting datum</div>
+              <div>{'{{assignment}}'} - Toegewezen slot</div>
+              <div>{'{{dayOfWeek}}'} - Dag van de week</div>
+              <div>{'{{timeSlot}}'} - Tijdslot</div>
+            </div>
+          </div>
+
+          <div className="flex space-x-4 pt-4">
+            <button
+              type="button"
+              onClick={onClose}
+              className="flex-1 px-4 py-2 text-gray-700 bg-gray-200 rounded-lg hover:bg-gray-300 transition-colors"
+            >
+              Annuleren
+            </button>
+            <button
+              type="submit"
+              className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+            >
+              Alle Templates Opslaan
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  )
+}
+
+// Timeslot Configuration Modal Component
+function TimeslotConfigModal({ onClose, onSave }: { 
+  onClose: () => void
+  onSave: (data: {
+    maxTeamsPerSlot: number
+    timeSlots: Array<{ startTime: string, endTime: string, enabled: boolean }>
+    activeDays: Record<number, boolean>
+  }) => void 
+}) {
+  const [config, setConfig] = useState({
+    maxTeamsPerSlot: 5,
+    timeSlots: [
+      { startTime: '13:30', endTime: '14:30', enabled: true },
+      { startTime: '14:30', endTime: '15:30', enabled: true },
+      { startTime: '15:30', endTime: '16:30', enabled: true },
+      { startTime: '16:30', endTime: '17:30', enabled: true },
+      { startTime: '17:30', endTime: '18:30', enabled: true },
+      { startTime: '18:30', endTime: '19:30', enabled: true },
+      { startTime: '19:30', endTime: '20:30', enabled: true },
+      { startTime: '20:30', endTime: '21:30', enabled: true }
+    ],
+    activeDays: {
+      1: true, // Monday
+      2: true, // Tuesday
+      3: true, // Wednesday
+      4: true, // Thursday
+      5: true  // Friday
+    }
+  })
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault()
+    onSave(config)
+  }
+
+  const toggleTimeSlot = (index: number) => {
+    setConfig(prev => ({
+      ...prev,
+      timeSlots: prev.timeSlots.map((slot, i) => 
+        i === index ? { ...slot, enabled: !slot.enabled } : slot
+      )
+    }))
+  }
+
+  const toggleDay = (day: number) => {
+    setConfig(prev => ({
+      ...prev,
+      activeDays: {
+        ...prev.activeDays,
+        [day]: !prev.activeDays[day as keyof typeof prev.activeDays]
+      }
+    }))
+  }
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+      <div className="bg-white rounded-lg p-6 w-full max-w-3xl max-h-[90vh] overflow-y-auto">
+        <div className="flex items-center justify-between mb-6">
+          <h3 className="text-xl font-bold text-gray-900">Tijdslot Configuratie</h3>
+          <button
+            onClick={onClose}
+            className="text-gray-400 hover:text-gray-600"
+          >
+            ✕
+          </button>
+        </div>
+
+        <form onSubmit={handleSubmit} className="space-y-6">
+          <div>
+            <label className="block text-sm font-bold text-gray-900 mb-2">
+              Maximum Teams per Tijdslot
+            </label>
+            <input
+              type="number"
+              min="1"
+              max="10"
+              value={config.maxTeamsPerSlot}
+              onChange={(e) => setConfig({ ...config, maxTeamsPerSlot: parseInt(e.target.value) })}
+              className="w-32 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
+
+          <div>
+            <h4 className="font-bold text-lg text-gray-900 mb-3">Actieve Dagen</h4>
+            <div className="grid grid-cols-5 gap-3">
+              {[
+                { day: 1, label: 'Maandag' },
+                { day: 2, label: 'Dinsdag' },
+                { day: 3, label: 'Woensdag' },
+                { day: 4, label: 'Donderdag' },
+                { day: 5, label: 'Vrijdag' }
+              ].map(({ day, label }) => (
+                <label key={day} className="flex items-center space-x-2">
+                  <input
+                    type="checkbox"
+                    checked={config.activeDays[day as keyof typeof config.activeDays]}
+                    onChange={() => toggleDay(day)}
+                    className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                  />
+                  <span className="font-medium text-gray-900">{label}</span>
+                </label>
+              ))}
+            </div>
+          </div>
+
+          <div>
+            <h4 className="font-bold text-lg text-gray-900 mb-3">Beschikbare Tijdsloten</h4>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+              {config.timeSlots.map((slot, index) => (
+                <label key={index} className="flex items-center space-x-2 p-3 border rounded-lg">
+                  <input
+                    type="checkbox"
+                    checked={slot.enabled}
+                    onChange={() => toggleTimeSlot(index)}
+                    className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                  />
+                  <span className="font-medium text-gray-900">
+                    {slot.startTime} - {slot.endTime}
+                  </span>
+                </label>
+              ))}
+            </div>
+          </div>
+
+          <div className="flex space-x-4 pt-4">
+            <button
+              type="button"
+              onClick={onClose}
+              className="flex-1 px-4 py-2 text-gray-700 bg-gray-200 rounded-lg hover:bg-gray-300 transition-colors"
+            >
+              Annuleren
+            </button>
+            <button
+              type="submit"
+              className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+            >
+              Configuratie Opslaan
+            </button>
+          </div>
+        </form>
       </div>
     </div>
   )

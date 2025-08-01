@@ -8,7 +8,8 @@ export async function GET() {
         team: {
           select: {
             id: true,
-            name: true,
+            firstName: true,
+            lastName: true,
             contactEmail: true,
             memberCount: true
           }
