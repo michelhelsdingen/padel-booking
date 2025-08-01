@@ -8,7 +8,32 @@ import { v4 as uuidv4 } from 'uuid'
 export async function POST(request: NextRequest) {
   try {
     console.log('Registration POST request received')
-    const body = await request.json()
+    
+    // Check if request has a body
+    const requestText = await request.text()
+    console.log('Raw request text:', requestText)
+    console.log('Request text length:', requestText.length)
+    
+    if (!requestText || requestText.length === 0) {
+      console.error('Empty request body')
+      return NextResponse.json(
+        { error: 'Request body is empty' },
+        { status: 400 }
+      )
+    }
+    
+    let body
+    try {
+      body = JSON.parse(requestText)
+    } catch (parseError) {
+      console.error('JSON parse error:', parseError)
+      console.error('Failed to parse:', requestText)
+      return NextResponse.json(
+        { error: 'Invalid JSON in request body' },
+        { status: 400 }
+      )
+    }
+    
     console.log('Request body:', JSON.stringify(body, null, 2))
     
     // Validate request data
@@ -196,7 +221,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Get team data with preferences and members for email
-    const { data: teamWithDetails } = await supabaseAdmin
+    const { data: teamWithDetails, error: fetchError } = await supabaseAdmin
       .from('teams')
       .select(`
         *,
@@ -208,6 +233,10 @@ export async function POST(request: NextRequest) {
       `)
       .eq('id', team.id)
       .single()
+      
+    if (fetchError) {
+      console.error('Error fetching team details for email:', fetchError)
+    }
 
     if (teamWithDetails) {
       // Send confirmation email
