@@ -19,15 +19,6 @@ export default function Home() {
           <p className="text-xl text-gray-900 font-medium mb-8 max-w-2xl mx-auto">
             Inschrijven voor wekelijkse padellessen. Selecteer je voorkeurtijden en laat de loting bepalen wanneer je speelt!
           </p>
-          
-          <div className="flex justify-center">
-            <Link 
-              href="/inschrijven" 
-              className="bg-green-600 hover:bg-green-700 text-white px-8 py-4 rounded-lg font-semibold transition-colors text-lg"
-            >
-              Schrijf in voor Padel Les!
-            </Link>
-          </div>
         </div>
 
         <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8 mb-16">
@@ -83,6 +74,16 @@ export default function Home() {
               <p className="text-gray-900 font-medium">Ontvang je toegewezen tijdslot en geniet van je padeltraining.</p>
             </div>
           </div>
+        </div>
+
+        {/* Registration button at the bottom */}
+        <div className="flex justify-center pt-8">
+          <Link 
+            href="/inschrijven" 
+            className="bg-green-600 hover:bg-green-700 text-white px-12 py-6 rounded-lg font-bold transition-colors text-xl shadow-lg"
+          >
+            Schrijf in voor Padel Les!
+          </Link>
         </div>
       </div>
     </div>
