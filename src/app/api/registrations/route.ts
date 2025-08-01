@@ -126,6 +126,7 @@ export async function POST(request: NextRequest) {
 
     // Create team with generated UUID
     const teamId = uuidv4()
+    const now = new Date().toISOString()
     const { data: team, error: teamError } = await supabaseAdmin
       .from('teams')
       .insert({
@@ -134,6 +135,8 @@ export async function POST(request: NextRequest) {
         lastName: validatedData.team.lastName,
         contactEmail: validatedData.team.contactEmail,
         memberCount: validatedData.team.members.length + 1, // +1 for the contact person
+        createdAt: now,
+        updatedAt: now
       })
       .select()
       .single()
@@ -150,7 +153,9 @@ export async function POST(request: NextRequest) {
         teamId: team.id,
         firstName: validatedData.team.firstName,
         lastName: validatedData.team.lastName,
-        email: validatedData.team.contactEmail
+        email: validatedData.team.contactEmail,
+        createdAt: now,
+        updatedAt: now
       },
       // Add other members
       ...validatedData.team.members.map(member => ({
@@ -158,7 +163,9 @@ export async function POST(request: NextRequest) {
         teamId: team.id,
         firstName: member.firstName,
         lastName: member.lastName,
-        email: member.email
+        email: member.email,
+        createdAt: now,
+        updatedAt: now
       }))
     ]
 
@@ -175,7 +182,9 @@ export async function POST(request: NextRequest) {
       id: uuidv4(),
       teamId: team.id,
       timeslotId: pref.timeslotId,
-      priority: pref.priority
+      priority: pref.priority,
+      createdAt: now,
+      updatedAt: now
     }))
 
     const { error: preferencesError } = await supabaseAdmin
