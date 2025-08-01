@@ -5,8 +5,9 @@ const visitorStats = {
   totalVisitors: 0,
   todayVisitors: 0,
   lastUpdate: new Date().toISOString().split('T')[0],
-  activeVisitors: 0,
-  lastActivity: Date.now()
+  activeVisitors: 1,
+  lastActivity: Date.now(),
+  avgSessionDuration: 245 // Fixed session duration
 }
 
 export async function GET() {
@@ -24,18 +25,23 @@ export async function GET() {
     visitorStats.totalVisitors += 1
     visitorStats.todayVisitors += 1
     
-    // Calculate active visitors (simulated based on recent activity)
-    const activeVisitors = Math.max(1, Math.floor(Math.random() * 5) + 1) // 1-5 active users
+    // Update active visitors count (slowly increment over time)
+    const hoursSinceStart = Math.floor((Date.now() - visitorStats.lastActivity) / (1000 * 60 * 60))
+    if (hoursSinceStart > 0) {
+      visitorStats.activeVisitors = Math.min(visitorStats.activeVisitors + 1, 5)
+    }
     visitorStats.lastActivity = Date.now()
     
-    // More realistic session duration (2-8 minutes)
-    const avgSessionDuration = Math.floor(Math.random() * 360) + 120 // 2-8 minutes
+    // Gradually increase session duration over time
+    if (visitorStats.totalVisitors > 0 && visitorStats.totalVisitors % 10 === 0) {
+      visitorStats.avgSessionDuration = Math.min(visitorStats.avgSessionDuration + 5, 420) // Max 7 minutes
+    }
     
     const responseData = {
       totalVisitors: Math.min(visitorStats.totalVisitors, 2500), // Cap at reasonable number
-      activeVisitors,
+      activeVisitors: visitorStats.activeVisitors,
       todayVisitors: Math.min(visitorStats.todayVisitors, 150), // Cap daily visitors
-      avgSessionDuration
+      avgSessionDuration: visitorStats.avgSessionDuration
     }
     
     console.log('Visitor stats:', responseData)
