@@ -30,6 +30,7 @@ export default function InschrijvenPage() {
     handleSubmit,
     watch,
     setValue,
+    trigger,
     formState: { errors }
   } = useForm<FormData>({
     resolver: zodResolver(completeRegistrationSchema),
@@ -292,7 +293,12 @@ export default function InschrijvenPage() {
                   <div className="flex justify-end mt-8">
                     <button
                       type="button"
-                      onClick={() => setStep(2)}
+                      onClick={async () => {
+                        const isValid = await trigger(['team.firstName', 'team.lastName', 'team.contactEmail'])
+                        if (isValid) {
+                          setStep(2)
+                        }
+                      }}
                       className="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded-lg transition-colors"
                     >
                       Volgende
@@ -401,7 +407,12 @@ export default function InschrijvenPage() {
                     </button>
                     <button
                       type="button"
-                      onClick={() => setStep(3)}
+                      onClick={async () => {
+                        const isValid = await trigger('team.members')
+                        if (isValid && preferences.length > 0) {
+                          setStep(3)
+                        }
+                      }}
                       disabled={preferences.length === 0}
                       className="bg-green-600 hover:bg-green-700 disabled:bg-gray-400 text-white px-6 py-2 rounded-lg transition-colors"
                     >
