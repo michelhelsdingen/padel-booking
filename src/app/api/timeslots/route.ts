@@ -1,12 +1,14 @@
 import { NextResponse } from 'next/server'
-import { prisma } from '@/lib/prisma'
+import { supabaseAdmin } from '@/lib/supabase'
 
 export async function GET() {
   try {
     // Check if timeslots exist, create them if they don't
-    const existingCount = await prisma.timeslot.count()
+    const { count } = await supabaseAdmin
+      .from('Timeslot')
+      .select('*', { count: 'exact', head: true })
     
-    if (existingCount === 0) {
+    if (count === 0) {
       const timeSlotsToCreate = []
       
       // Days: 1=Monday, 2=Tuesday, 3=Wednesday, 4=Thursday, 5=Friday
@@ -26,32 +28,45 @@ export async function GET() {
         }
       }
       
-      await prisma.timeslot.createMany({
-        data: timeSlotsToCreate
-      })
+      const { error: insertError } = await supabaseAdmin
+        .from('Timeslot')
+        .insert(timeSlotsToCreate)
+        
+      if (insertError) {
+        throw insertError
+      }
     }
 
-    const timeslots = await prisma.timeslot.findMany({
-      where: { isActive: true },
-      include: {
-        preferences: true
-      },
-      orderBy: [
-        { dayOfWeek: 'asc' },
-        { startTime: 'asc' }
-      ]
-    })
+    // Get timeslots with preference counts
+    const { data: timeslots, error } = await supabaseAdmin
+      .from('Timeslot')
+      .select(`
+        id,
+        dayOfWeek,
+        startTime,
+        endTime,
+        maxTeams,
+        isActive,
+        TeamPreference(*)
+      `)
+      .eq('isActive', true)
+      .order('dayOfWeek', { ascending: true })
+      .order('startTime', { ascending: true })
 
-    // Add preference count to each timeslot
-    const timeslotsWithCounts = timeslots.map(timeslot => ({
+    if (error) {
+      throw error
+    }
+
+    // Format the response to match expected structure
+    const timeslotsWithCounts = timeslots?.map(timeslot => ({
       id: timeslot.id,
       dayOfWeek: timeslot.dayOfWeek,
       startTime: timeslot.startTime,
       endTime: timeslot.endTime,
       maxTeams: timeslot.maxTeams,
       isActive: timeslot.isActive,
-      preferenceCount: timeslot.preferences.length
-    }))
+      preferenceCount: Array.isArray(timeslot.TeamPreference) ? timeslot.TeamPreference.length : 0
+    })) || []
 
     return NextResponse.json(timeslotsWithCounts)
   } catch (error) {
@@ -59,8 +74,7 @@ export async function GET() {
     return NextResponse.json(
       { 
         error: 'Fout bij ophalen tijdsloten',
-        details: error instanceof Error ? error.message : 'Unknown error',
-        DATABASE_URL_SET: !!process.env.DATABASE_URL
+        details: error instanceof Error ? error.message : 'Unknown error'
       },
       { status: 500 }
     )

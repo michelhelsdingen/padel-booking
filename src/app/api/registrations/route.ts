@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { prisma } from '@/lib/prisma'
+import { supabaseAdmin } from '@/lib/supabase'
 import { completeRegistrationSchema } from '@/lib/validations'
 import { z } from 'zod'
 
@@ -11,8 +11,11 @@ export async function POST(request: NextRequest) {
     const validatedData = completeRegistrationSchema.parse(body)
     
     // Ensure timeslots exist, create default ones if none exist
-    const existingTimeslots = await prisma.timeslot.count()
-    if (existingTimeslots === 0) {
+    const { count } = await supabaseAdmin
+      .from('Timeslot')
+      .select('*', { count: 'exact', head: true })
+      
+    if (count === 0) {
       const timeSlotsToCreate = []
       
       // Days: 1=Monday, 2=Tuesday, 3=Wednesday, 4=Thursday, 5=Friday
@@ -32,15 +35,23 @@ export async function POST(request: NextRequest) {
         }
       }
       
-      await prisma.timeslot.createMany({
-        data: timeSlotsToCreate
-      })
+      const { error: insertError } = await supabaseAdmin
+        .from('Timeslot')
+        .insert(timeSlotsToCreate)
+        
+      if (insertError) {
+        throw insertError
+      }
     }
     
     // Check if registration period is active, create one if none exists
-    let activeRegistration = await prisma.registrationPeriod.findFirst({
-      where: { isActive: true }
-    })
+    const { data: activeRegistrations } = await supabaseAdmin
+      .from('RegistrationPeriod')
+      .select('*')
+      .eq('isActive', true)
+      .limit(1)
+      
+    let activeRegistration = activeRegistrations?.[0]
     
     if (!activeRegistration) {
       // Auto-create an active registration period
@@ -48,20 +59,31 @@ export async function POST(request: NextRequest) {
       const registrationEnd = new Date(now.getTime() + (30 * 24 * 60 * 60 * 1000)) // 30 days
       const lotteryDate = new Date(registrationEnd.getTime() + (1 * 24 * 60 * 60 * 1000)) // 1 day after
 
-      activeRegistration = await prisma.registrationPeriod.create({
-        data: {
+      const { data: newRegistration, error: createError } = await supabaseAdmin
+        .from('RegistrationPeriod')
+        .insert({
           name: `Inschrijfperiode ${now.toLocaleDateString('nl-NL')}`,
-          registrationStart: now,
-          registrationEnd: registrationEnd,
-          lotteryDate: lotteryDate,
+          registrationStart: now.toISOString(),
+          registrationEnd: registrationEnd.toISOString(),
+          lotteryDate: lotteryDate.toISOString(),
           isActive: true,
           description: 'Automatisch aangemaakte inschrijfperiode'
-        }
-      })
+        })
+        .select()
+        .single()
+        
+      if (createError) {
+        throw createError
+      }
+      
+      activeRegistration = newRegistration
     }
     
     const now = new Date()
-    if (now < activeRegistration.registrationStart || now > activeRegistration.registrationEnd) {
+    const regStart = new Date(activeRegistration.registrationStart)
+    const regEnd = new Date(activeRegistration.registrationEnd)
+    
+    if (now < regStart || now > regEnd) {
       return NextResponse.json(
         { error: 'De inschrijfperiode is gesloten' },
         { status: 400 }
@@ -69,11 +91,13 @@ export async function POST(request: NextRequest) {
     }
     
     // Check if team email is already registered
-    const existingTeam = await prisma.team.findUnique({
-      where: { contactEmail: validatedData.team.contactEmail }
-    })
+    const { data: existingTeam } = await supabaseAdmin
+      .from('Team')
+      .select('id')
+      .eq('contactEmail', validatedData.team.contactEmail)
+      .limit(1)
     
-    if (existingTeam) {
+    if (existingTeam && existingTeam.length > 0) {
       return NextResponse.json(
         { error: 'Dit e-mailadres is al geregistreerd' },
         { status: 400 }
@@ -82,70 +106,82 @@ export async function POST(request: NextRequest) {
     
     // Validate timeslots exist
     const timeslotIds = validatedData.preferences.preferences.map(p => p.timeslotId)
-    const timeslots = await prisma.timeslot.findMany({
-      where: { 
-        id: { in: timeslotIds },
-        isActive: true
-      }
-    })
+    const { data: timeslots } = await supabaseAdmin
+      .from('Timeslot')
+      .select('id')
+      .in('id', timeslotIds)
+      .eq('isActive', true)
     
-    if (timeslots.length !== timeslotIds.length) {
+    if (!timeslots || timeslots.length !== timeslotIds.length) {
       return NextResponse.json(
         { error: 'Een of meer geselecteerde tijdsloten zijn niet geldig' },
         { status: 400 }
       )
     }
 
-    // Create team with members and preferences in a transaction
-    const result = await prisma.$transaction(async (tx) => {
-      // Create team
-      const team = await tx.team.create({
-        data: {
-          firstName: validatedData.team.firstName,
-          lastName: validatedData.team.lastName,
-          contactEmail: validatedData.team.contactEmail,
-          memberCount: validatedData.team.members.length + 1, // +1 for the contact person
-        }
+    // Create team
+    const { data: team, error: teamError } = await supabaseAdmin
+      .from('Team')
+      .insert({
+        firstName: validatedData.team.firstName,
+        lastName: validatedData.team.lastName,
+        contactEmail: validatedData.team.contactEmail,
+        memberCount: validatedData.team.members.length + 1, // +1 for the contact person
       })
+      .select()
+      .single()
 
-      // Create team members
-      await tx.teamMember.createMany({
-        data: [
-          // Add contact person as first member
-          {
-            teamId: team.id,
-            firstName: validatedData.team.firstName,
-            lastName: validatedData.team.lastName,
-            email: validatedData.team.contactEmail
-          },
-          // Add other members
-          ...validatedData.team.members.map(member => ({
-            teamId: team.id,
-            firstName: member.firstName,
-            lastName: member.lastName,
-            email: member.email
-          }))
-        ]
-      })
+    if (teamError) {
+      throw teamError
+    }
 
-      // Create preferences
-      await tx.teamPreference.createMany({
-        data: validatedData.preferences.preferences.map(pref => ({
-          teamId: team.id,
-          timeslotId: pref.timeslotId,
-          priority: pref.priority
-        }))
-      })
+    // Create team members
+    const membersToCreate = [
+      // Add contact person as first member
+      {
+        teamId: team.id,
+        firstName: validatedData.team.firstName,
+        lastName: validatedData.team.lastName,
+        email: validatedData.team.contactEmail
+      },
+      // Add other members
+      ...validatedData.team.members.map(member => ({
+        teamId: team.id,
+        firstName: member.firstName,
+        lastName: member.lastName,
+        email: member.email
+      }))
+    ]
 
-      return team
-    })
+    const { error: membersError } = await supabaseAdmin
+      .from('TeamMember')
+      .insert(membersToCreate)
+
+    if (membersError) {
+      throw membersError
+    }
+
+    // Create preferences
+    const preferencesToCreate = validatedData.preferences.preferences.map(pref => ({
+      teamId: team.id,
+      timeslotId: pref.timeslotId,
+      priority: pref.priority
+    }))
+
+    const { error: preferencesError } = await supabaseAdmin
+      .from('TeamPreference')
+      .insert(preferencesToCreate)
+
+    if (preferencesError) {
+      throw preferencesError
+    }
 
     // TODO: Send confirmation email here
-    // await sendConfirmationEmail(result, validatedData)
+    // await sendConfirmationEmail(team, validatedData)
 
     return NextResponse.json({
       success: true,
-      teamId: result.id,
+      teamId: team.id,
       message: 'Team succesvol ingeschreven'
     })
 
@@ -168,25 +204,27 @@ export async function POST(request: NextRequest) {
 
 export async function GET() {
   try {
-    const teams = await prisma.team.findMany({
-      include: {
-        members: true,
-        preferences: {
-          include: {
-            timeslot: true
-          },
-          orderBy: { priority: 'asc' }
-        },
-        assignments: {
-          include: {
-            timeslot: true
-          }
-        }
-      },
-      orderBy: { createdAt: 'desc' }
-    })
+    const { data: teams, error } = await supabaseAdmin
+      .from('Team')
+      .select(`
+        *,
+        members:TeamMember(*),
+        preferences:TeamPreference(
+          *,
+          timeslot:Timeslot(*)
+        ),
+        assignments:TeamAssignment(
+          *,
+          timeslot:Timeslot(*)
+        )
+      `)
+      .order('createdAt', { ascending: false })
 
-    return NextResponse.json(teams)
+    if (error) {
+      throw error
+    }
+
+    return NextResponse.json(teams || [])
   } catch (error) {
     console.error('Error fetching registrations:', error)
     return NextResponse.json(
