@@ -50,7 +50,7 @@ export async function GET() {
     // Extract real metrics from the response
     const events = analyticsData.events || []
     const totalVisitors = events.length || Math.floor(Math.random() * 5000) + 1000
-    const todayVisitors = events.filter((event: any) => {
+    const todayVisitors = events.filter((event: { timestamp: string }) => {
       const eventDate = new Date(event.timestamp).toISOString().split('T')[0]
       return eventDate === today
     }).length || Math.floor(Math.random() * 200) + 50
