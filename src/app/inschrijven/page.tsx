@@ -294,7 +294,7 @@ export default function InschrijvenPage() {
                     <button
                       type="button"
                       onClick={async () => {
-                        const isValid = await trigger(['team.firstName', 'team.lastName', 'team.contactEmail'])
+                        const isValid = await trigger(['team.firstName', 'team.lastName', 'team.contactEmail', 'team.members'])
                         if (isValid) {
                           setStep(2)
                         }
@@ -407,9 +407,8 @@ export default function InschrijvenPage() {
                     </button>
                     <button
                       type="button"
-                      onClick={async () => {
-                        const isValid = await trigger('team.members')
-                        if (isValid && preferences.length > 0) {
+                      onClick={() => {
+                        if (preferences.length > 0) {
                           setStep(3)
                         }
                       }}
