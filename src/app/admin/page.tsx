@@ -79,6 +79,7 @@ interface LotteryResults {
 }
 import { Play, BarChart3, Users, Calendar, Mail, Settings, RefreshCw, Trash2, UserPlus } from 'lucide-react'
 import { formatTimeslot, DAYS_OF_WEEK } from '@/lib/utils'
+import VisitorStats from '@/components/admin/VisitorStats'
 
 interface Team {
   id: string
@@ -560,6 +561,7 @@ export default function AdminPage() {
       <div className="container mx-auto px-4 py-8">
         {activeTab === 'overview' && (
           <div className="space-y-8">
+            <VisitorStats />
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
               <div className="bg-white p-6 rounded-lg shadow">
                 <div className="flex items-center">

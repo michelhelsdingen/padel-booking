@@ -17,33 +17,33 @@ export default function Home() {
             />
           </div>
           <p className="text-xl text-gray-900 font-medium mb-8 max-w-2xl mx-auto">
-            Inschrijven voor wekelijkse padellessen. Selecteer je voorkeurtijden en laat de loting bepalen wanneer je speelt!
+            Altijd al padel les willen nemen? Dit is je kans!
           </p>
         </div>
 
         <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8 mb-16">
           <div className="bg-white p-6 rounded-lg shadow-lg text-center">
             <Users className="h-12 w-12 text-green-600 mx-auto mb-4" />
-            <h3 className="text-xl font-bold text-gray-900 mb-2">Team Vorming</h3>
-            <p className="text-gray-900 font-medium">2-4 spelers per team. Één inschrijving per team.</p>
+            <h3 className="text-xl font-bold text-gray-900 mb-2">Alleen of met je Team</h3>
+            <p className="text-gray-900 font-medium">Geef je alleen of samen met je Padel maatjes op</p>
           </div>
           
           <div className="bg-white p-6 rounded-lg shadow-lg text-center">
             <Clock className="h-12 w-12 text-blue-600 mx-auto mb-4" />
             <h3 className="text-xl font-bold text-gray-900 mb-2">Tijdsloten</h3>
-            <p className="text-gray-900 font-medium">Maandag t/m vrijdag, 13:30 - 21:30. Kies tot 4 voorkeuren.</p>
+            <p className="text-gray-900 font-medium">Kies een viertal voorkeurstijdstippen</p>
           </div>
           
           <div className="bg-white p-6 rounded-lg shadow-lg text-center">
             <Trophy className="h-12 w-12 text-purple-600 mx-auto mb-4" />
             <h3 className="text-xl font-bold text-gray-900 mb-2">Eerlijke Loting</h3>
-            <p className="text-gray-900 font-medium">Algoritme zorgt voor eerlijke verdeling van tijdsloten.</p>
+            <p className="text-gray-900 font-medium">Een slimme loting zorgt voor een eerlijke verdeling!</p>
           </div>
           
           <div className="bg-white p-6 rounded-lg shadow-lg text-center">
             <Calendar className="h-12 w-12 text-orange-600 mx-auto mb-4" />
             <h3 className="text-xl font-bold text-gray-900 mb-2">Planning</h3>
-            <p className="text-gray-900 font-medium">Ontvang je rooster direct na de loting via e-mail.</p>
+            <p className="text-gray-900 font-medium">Na de loting ontvang je vanzelf bericht of en wanneer je kunt lessen</p>
           </div>
         </div>
 
