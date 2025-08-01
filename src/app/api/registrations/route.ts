@@ -197,9 +197,15 @@ export async function POST(request: NextRequest) {
     if (teamWithDetails) {
       // Send confirmation email
       try {
+        console.log('Attempting to send confirmation email to:', teamWithDetails.contactEmail)
         await sendConfirmationEmail(teamWithDetails)
+        console.log('Confirmation email sent successfully')
       } catch (emailError) {
         console.error('Failed to send confirmation email:', emailError)
+        console.error('Email error details:', {
+          message: emailError instanceof Error ? emailError.message : 'Unknown error',
+          type: emailError?.constructor?.name
+        })
         // Don't fail the registration if email fails
       }
     }
@@ -212,6 +218,8 @@ export async function POST(request: NextRequest) {
 
   } catch (error) {
     console.error('Registration error:', error)
+    console.error('Error type:', error?.constructor?.name)
+    console.error('Error message:', error instanceof Error ? error.message : 'Unknown error')
     
     if (error instanceof z.ZodError) {
       return NextResponse.json(
@@ -221,7 +229,11 @@ export async function POST(request: NextRequest) {
     }
 
     return NextResponse.json(
-      { error: 'Er is een fout opgetreden bij de inschrijving' },
+      { 
+        error: 'Er is een fout opgetreden bij de inschrijving',
+        details: error instanceof Error ? error.message : 'Unknown error',
+        type: error?.constructor?.name
+      },
       { status: 500 }
     )
   }

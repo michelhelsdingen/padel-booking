@@ -112,7 +112,11 @@ export default function InschrijvenPage() {
         let errorMessage = 'Er is een fout opgetreden bij de inschrijving'
         try {
           const result = await response.json()
+          console.error('API Error:', result)
           errorMessage = result.error || errorMessage
+          if (result.details) {
+            console.error('Error details:', result.details)
+          }
         } catch (e) {
           console.error('Failed to parse error response:', e)
         }
