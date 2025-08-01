@@ -20,18 +20,12 @@ export default function Home() {
             Inschrijven voor wekelijkse padellessen. Selecteer je voorkeurtijden en laat de loting bepalen wanneer je speelt!
           </p>
           
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+          <div className="flex justify-center">
             <Link 
               href="/inschrijven" 
               className="bg-green-600 hover:bg-green-700 text-white px-8 py-4 rounded-lg font-semibold transition-colors text-lg"
             >
-              Team Inschrijven
-            </Link>
-            <Link 
-              href="/rooster" 
-              className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-4 rounded-lg font-semibold transition-colors text-lg"
-            >
-              Rooster Bekijken
+              Schrijf in voor Padel Les!
             </Link>
           </div>
         </div>
