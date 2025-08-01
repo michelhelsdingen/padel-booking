@@ -9,7 +9,7 @@ export default function Home() {
           <h1 className="text-5xl font-bold text-gray-900 mb-6">
             {process.env.NEXT_PUBLIC_CLUB_NAME || "Padel Club"}
           </h1>
-          <p className="text-xl text-gray-600 mb-8 max-w-2xl mx-auto">
+          <p className="text-xl text-gray-800 mb-8 max-w-2xl mx-auto">
             Inschrijven voor wekelijkse padellessen. Selecteer je voorkeurtijden en laat de loting bepalen wanneer je speelt!
           </p>
           
@@ -33,25 +33,25 @@ export default function Home() {
           <div className="bg-white p-6 rounded-lg shadow-lg text-center">
             <Users className="h-12 w-12 text-green-600 mx-auto mb-4" />
             <h3 className="text-xl font-semibold mb-2">Team Vorming</h3>
-            <p className="text-gray-600">2-4 spelers per team. Één inschrijving per team.</p>
+            <p className="text-gray-700">2-4 spelers per team. Één inschrijving per team.</p>
           </div>
           
           <div className="bg-white p-6 rounded-lg shadow-lg text-center">
             <Clock className="h-12 w-12 text-blue-600 mx-auto mb-4" />
             <h3 className="text-xl font-semibold mb-2">Tijdsloten</h3>
-            <p className="text-gray-600">Maandag t/m vrijdag, 13:30 - 21:30. Kies tot 4 voorkeuren.</p>
+            <p className="text-gray-700">Maandag t/m vrijdag, 13:30 - 21:30. Kies tot 4 voorkeuren.</p>
           </div>
           
           <div className="bg-white p-6 rounded-lg shadow-lg text-center">
             <Trophy className="h-12 w-12 text-purple-600 mx-auto mb-4" />
             <h3 className="text-xl font-semibold mb-2">Eerlijke Loting</h3>
-            <p className="text-gray-600">Algoritme zorgt voor eerlijke verdeling van tijdsloten.</p>
+            <p className="text-gray-700">Algoritme zorgt voor eerlijke verdeling van tijdsloten.</p>
           </div>
           
           <div className="bg-white p-6 rounded-lg shadow-lg text-center">
             <Calendar className="h-12 w-12 text-orange-600 mx-auto mb-4" />
             <h3 className="text-xl font-semibold mb-2">Planning</h3>
-            <p className="text-gray-600">Ontvang je rooster direct na de loting via e-mail.</p>
+            <p className="text-gray-700">Ontvang je rooster direct na de loting via e-mail.</p>
           </div>
         </div>
 
@@ -63,7 +63,7 @@ export default function Home() {
                 <span className="text-2xl font-bold text-green-600">1</span>
               </div>
               <h3 className="text-xl font-semibold mb-2">Inschrijven</h3>
-              <p className="text-gray-600">Stel je team samen en selecteer je voorkeurtijdsloten (1-4 opties).</p>
+              <p className="text-gray-700">Stel je team samen en selecteer je voorkeurtijdsloten (1-4 opties).</p>
             </div>
             
             <div className="text-center">
@@ -71,7 +71,7 @@ export default function Home() {
                 <span className="text-2xl font-bold text-blue-600">2</span>
               </div>
               <h3 className="text-xl font-semibold mb-2">Loting</h3>
-              <p className="text-gray-600">Na sluiting inschrijving wordt er geloot volgens het prioriteitssysteem.</p>
+              <p className="text-gray-700">Na sluiting inschrijving wordt er geloot volgens het prioriteitssysteem.</p>
             </div>
             
             <div className="text-center">
@@ -79,7 +79,7 @@ export default function Home() {
                 <span className="text-2xl font-bold text-purple-600">3</span>
               </div>
               <h3 className="text-xl font-semibold mb-2">Spelen!</h3>
-              <p className="text-gray-600">Ontvang je toegewezen tijdslot en geniet van je padeltraining.</p>
+              <p className="text-gray-700">Ontvang je toegewezen tijdslot en geniet van je padeltraining.</p>
             </div>
           </div>
         </div>

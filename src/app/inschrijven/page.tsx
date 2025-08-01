@@ -133,7 +133,7 @@ export default function InschrijvenPage() {
               <span className="text-2xl">✓</span>
             </div>
             <h2 className="text-2xl font-bold text-green-600 mb-4">Inschrijving Gelukt!</h2>
-            <p className="text-gray-600 mb-6">
+            <p className="text-gray-700 mb-6">
               Je team is succesvol ingeschreven. Je ontvangt binnenkort een bevestigingsmail 
               met alle details. De loting vindt plaats op de aangegeven datum.
             </p>
@@ -174,7 +174,7 @@ export default function InschrijvenPage() {
                   
                   <div className="space-y-4">
                     <div>
-                      <label className="block text-sm font-medium mb-2">Teamnaam *</label>
+                      <label className="block text-sm font-semibold text-gray-800 mb-2">Teamnaam *</label>
                       <input
                         {...register('team.teamName')}
                         className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
@@ -186,7 +186,7 @@ export default function InschrijvenPage() {
                     </div>
 
                     <div>
-                      <label className="block text-sm font-medium mb-2">Contact E-mail *</label>
+                      <label className="block text-sm font-semibold text-gray-800 mb-2">Contact E-mail *</label>
                       <input
                         {...register('team.contactEmail')}
                         type="email"
@@ -200,7 +200,7 @@ export default function InschrijvenPage() {
 
                     <div>
                       <div className="flex items-center justify-between mb-4">
-                        <label className="block text-sm font-medium">Teamleden (1-3 extra spelers)</label>
+                        <label className="block text-sm font-semibold text-gray-800">Teamleden (1-3 extra spelers)</label>
                         {fields.length < 3 && (
                           <button
                             type="button"
@@ -262,7 +262,7 @@ export default function InschrijvenPage() {
               {step === 2 && (
                 <div>
                   <h2 className="text-xl font-semibold mb-6">Stap 2: Tijdslot Voorkeuren</h2>
-                  <p className="text-gray-600 mb-6">
+                  <p className="text-gray-700 mb-6">
                     Selecteer maximaal 4 tijdsloten. De volgorde bepaalt je prioriteit (1 = hoogste voorkeur).
                   </p>
 

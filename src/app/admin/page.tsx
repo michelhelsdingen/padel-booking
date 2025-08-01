@@ -165,7 +165,7 @@ export default function AdminPage() {
               <div className="flex items-center">
                 <Users className="h-8 w-8 text-blue-600" />
                 <div className="ml-4">
-                  <p className="text-sm font-medium text-gray-600">Totaal Teams</p>
+                  <p className="text-sm font-semibold text-gray-700">Totaal Teams</p>
                   <p className="text-2xl font-bold text-gray-900">{teams.length}</p>
                 </div>
               </div>
@@ -175,7 +175,7 @@ export default function AdminPage() {
               <div className="flex items-center">
                 <Calendar className="h-8 w-8 text-green-600" />
                 <div className="ml-4">
-                  <p className="text-sm font-medium text-gray-600">Toegewezen</p>
+                  <p className="text-sm font-semibold text-gray-700">Toegewezen</p>
                   <p className="text-2xl font-bold text-gray-900">{lotteryStats?.assignedTeams || 0}</p>
                 </div>
               </div>
@@ -185,7 +185,7 @@ export default function AdminPage() {
               <div className="flex items-center">
                 <Mail className="h-8 w-8 text-purple-600" />
                 <div className="ml-4">
-                  <p className="text-sm font-medium text-gray-600">Niet toegewezen</p>
+                  <p className="text-sm font-semibold text-gray-700">Niet toegewezen</p>
                   <p className="text-2xl font-bold text-gray-900">{lotteryStats?.unassignedTeams || 0}</p>
                 </div>
               </div>
@@ -195,7 +195,7 @@ export default function AdminPage() {
               <div className="flex items-center">
                 <BarChart3 className="h-8 w-8 text-orange-600" />
                 <div className="ml-4">
-                  <p className="text-sm font-medium text-gray-600">Succesvol %</p>
+                  <p className="text-sm font-semibold text-gray-700">Succesvol %</p>
                   <p className="text-2xl font-bold text-gray-900">
                     {lotteryStats?.totalTeams ? Math.round((lotteryStats.assignedTeams / lotteryStats.totalTeams) * 100) : 0}%
                   </p>
@@ -257,7 +257,7 @@ export default function AdminPage() {
                             ))}
                         </div>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
                         {new Date(team.createdAt).toLocaleDateString('nl-NL')}
                       </td>
                     </tr>
@@ -330,7 +330,7 @@ export default function AdminPage() {
             <div className="space-y-6">
               <div>
                 <h3 className="font-medium mb-2">Inschrijfperiode</h3>
-                <p className="text-sm text-gray-600 mb-4">
+                <p className="text-sm text-gray-700 mb-4">
                   Beheer wanneer teams zich kunnen inschrijven en wanneer de loting plaatsvindt.
                 </p>
                 <button className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors">
@@ -340,7 +340,7 @@ export default function AdminPage() {
 
               <div>
                 <h3 className="font-medium mb-2">E-mail Templates</h3>
-                <p className="text-sm text-gray-600 mb-4">
+                <p className="text-sm text-gray-700 mb-4">
                   Pas de e-mail templates aan voor bevestigingen en notificaties.
                 </p>
                 <button className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors">
@@ -350,7 +350,7 @@ export default function AdminPage() {
 
               <div>
                 <h3 className="font-medium mb-2">Tijdslot Configuratie</h3>
-                <p className="text-sm text-gray-600 mb-4">
+                <p className="text-sm text-gray-700 mb-4">
                   Beheer beschikbare tijdsloten en capaciteit per slot.
                 </p>
                 <button className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors">
