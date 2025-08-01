@@ -113,7 +113,7 @@ export async function POST(request: NextRequest) {
     
     if (error instanceof z.ZodError) {
       return NextResponse.json(
-        { error: 'Ongeldige gegevens', details: error.errors },
+        { error: 'Ongeldige gegevens', details: error.issues },
         { status: 400 }
       )
     }

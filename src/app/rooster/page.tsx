@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { Calendar, Clock, Users, Mail } from 'lucide-react'
-import { formatTimeslot, DAYS_OF_WEEK } from '@/lib/utils'
+import { DAYS_OF_WEEK } from '@/lib/utils'
 
 interface Assignment {
   team: {

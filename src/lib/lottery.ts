@@ -133,7 +133,7 @@ export async function runLottery(): Promise<LotteryResult> {
     for (const teamId of unassignedTeams) {
       // Find any available timeslot
       const availableTimeslot = Object.entries(timeslotCapacity)
-        .find(([_, capacity]) => capacity > 0)
+        .find(([, capacity]) => capacity > 0)
       
       if (availableTimeslot) {
         const [timeslotId] = availableTimeslot

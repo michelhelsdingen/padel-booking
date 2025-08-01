@@ -11,17 +11,12 @@ export const teamRegistrationSchema = z.object({
   members: z.array(teamMemberSchema)
     .min(1, 'Voeg minimaal 1 teamlid toe')
     .max(3, 'Maximaal 3 extra teamleden toegestaan')
-    .refine((members, ctx) => {
+    .refine((members) => {
       const emails = members.map(m => m.email.toLowerCase())
       const uniqueEmails = new Set(emails)
-      if (emails.length !== uniqueEmails.size) {
-        ctx.addIssue({
-          code: z.ZodIssueCode.custom,
-          message: 'E-mailadressen moeten uniek zijn'
-        })
-        return false
-      }
-      return true
+      return emails.length === uniqueEmails.size
+    }, {
+      message: 'E-mailadressen moeten uniek zijn'
     })
 })
 
@@ -34,17 +29,12 @@ export const preferencesSchema = z.object({
   preferences: z.array(timeslotPreferenceSchema)
     .min(1, 'Selecteer minimaal 1 tijdslot')
     .max(4, 'Maximaal 4 tijdsloten toegestaan')
-    .refine((prefs, ctx) => {
+    .refine((prefs) => {
       const priorities = prefs.map(p => p.priority)
       const uniquePriorities = new Set(priorities)
-      if (priorities.length !== uniquePriorities.size) {
-        ctx.addIssue({
-          code: z.ZodIssueCode.custom,
-          message: 'Elke prioriteit mag maar één keer gebruikt worden'
-        })
-        return false
-      }
-      return true
+      return priorities.length === uniquePriorities.size
+    }, {
+      message: 'Elke prioriteit mag maar één keer gebruikt worden'
     })
 })
 

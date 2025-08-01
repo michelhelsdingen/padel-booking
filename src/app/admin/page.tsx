@@ -52,8 +52,8 @@ export default function AdminPage() {
         const data = await response.json()
         setTeams(data)
       }
-    } catch (error) {
-      console.error('Error loading teams:', error)
+    } catch (err) {
+      console.error('Error loading teams:', err)
     }
   }
 
@@ -64,8 +64,8 @@ export default function AdminPage() {
         const data = await response.json()
         setLotteryStats(data)
       }
-    } catch (error) {
-      console.error('Error loading lottery stats:', error)
+    } catch (err) {
+      console.error('Error loading lottery stats:', err)
     }
   }
 
@@ -142,7 +142,7 @@ export default function AdminPage() {
               return (
                 <button
                   key={tab.id}
-                  onClick={() => setActiveTab(tab.id as any)}
+                  onClick={() => setActiveTab(tab.id as 'overview' | 'teams' | 'lottery' | 'settings')}
                   className={`flex items-center space-x-2 py-4 border-b-2 transition-colors ${
                     activeTab === tab.id
                       ? 'border-blue-500 text-blue-600'

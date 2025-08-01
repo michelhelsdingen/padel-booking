@@ -75,15 +75,18 @@ export async function POST() {
 }
 
 // Placeholder email functions - implement with your preferred email service
+// Placeholder email functions - implement with your preferred email service
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 async function sendAssignmentEmail(email: string, data: {
   teamName: string
   timeslot: string
-  members: any[]
+  members: Array<{ name: string; email: string }>
 }) {
   // Implementation with email service
   console.log('Send assignment email:', { email, data })
 }
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 async function sendWaitingListEmail(email: string, data: {
   teamName: string
 }) {

@@ -1,9 +1,9 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useForm, useFieldArray } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { Plus, Minus, Calendar, Clock } from 'lucide-react'
+import { Plus, Minus } from 'lucide-react'
 import Link from 'next/link'
 import { completeRegistrationSchema } from '@/lib/validations'
 import { formatTimeslot, DAYS_OF_WEEK, TIME_SLOTS } from '@/lib/utils'
@@ -63,8 +63,8 @@ export default function InschrijvenPage() {
         const data = await response.json()
         setTimeslots(data)
       }
-    } catch (error) {
-      console.error('Error loading timeslots:', error)
+    } catch (err) {
+      console.error('Error loading timeslots:', err)
     }
   }
 
@@ -83,7 +83,7 @@ export default function InschrijvenPage() {
         const error = await response.json()
         alert(`Fout: ${error.message}`)
       }
-    } catch (error) {
+    } catch (err) {
       alert('Er is een fout opgetreden. Probeer het opnieuw.')
     } finally {
       setIsLoading(false)
@@ -112,6 +112,8 @@ export default function InschrijvenPage() {
     }
   }
 
+  // Utility function for future priority reordering feature
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const updatePriority = (timeslotId: string, newPriority: number) => {
     const currentPrefs = [...(preferences || [])]
     const prefIndex = currentPrefs.findIndex(p => p.timeslotId === timeslotId)
@@ -349,7 +351,7 @@ export default function InschrijvenPage() {
                       <div className="space-y-2">
                         {preferences
                           .sort((a, b) => a.priority - b.priority)
-                          .map((pref, index) => {
+                          .map((pref) => {
                             const timeslot = timeslots.find(t => t.id === pref.timeslotId)
                             return timeslot ? (
                               <div key={pref.timeslotId} className="flex items-center">
