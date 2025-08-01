@@ -1,0 +1,75 @@
+<svg width="400" height="200" viewBox="0 0 400 200" xmlns="http://www.w3.org/2000/svg">
+  <!-- Purple background -->
+  <rect width="400" height="200" fill="#5B2C87"/>
+  
+  <!-- Orange diagonal stripe -->
+  <path d="M280 0 L400 0 L400 120 L280 200 Z" fill="#E67E22"/>
+  
+  <!-- Tennis racket (white) -->
+  <ellipse cx="40" cy="60" rx="15" ry="25" fill="none" stroke="white" stroke-width="3"/>
+  <rect x="38" y="85" width="4" height="20" fill="white"/>
+  <!-- Racket strings -->
+  <g stroke="white" stroke-width="1" opacity="0.7">
+    <line x1="30" y1="45" x2="50" y2="45"/>
+    <line x1="30" y1="50" x2="50" y2="50"/>
+    <line x1="30" y1="55" x2="50" y2="55"/>
+    <line x1="30" y1="60" x2="50" y2="60"/>
+    <line x1="30" y1="65" x2="50" y2="65"/>
+    <line x1="30" y1="70" x2="50" y2="70"/>
+    <line x1="30" y1="75" x2="50" y2="75"/>
+    <line x1="35" y1="40" x2="35" y2="80"/>
+    <line x1="40" y1="40" x2="40" y2="80"/>
+    <line x1="45" y1="40" x2="45" y2="80"/>
+  </g>
+  
+  <!-- Padel racket (orange) -->
+  <ellipse cx="90" cy="60" rx="18" ry="28" fill="none" stroke="#E67E22" stroke-width="4"/>
+  <rect x="87" y="88" width="6" height="22" fill="#E67E22"/>
+  <!-- Padel holes -->
+  <g fill="#5B2C87">
+    <circle cx="80" cy="45" r="2"/>
+    <circle cx="85" cy="48" r="2"/>
+    <circle cx="90" cy="45" r="2"/>
+    <circle cx="95" cy="48" r="2"/>
+    <circle cx="100" cy="45" r="2"/>
+    <circle cx="80" cy="55" r="2"/>
+    <circle cx="85" cy="58" r="2"/>
+    <circle cx="90" cy="55" r="2"/>
+    <circle cx="95" cy="58" r="2"/>
+    <circle cx="100" cy="55" r="2"/>
+    <circle cx="80" cy="65" r="2"/>
+    <circle cx="85" cy="68" r="2"/>
+    <circle cx="90" cy="65" r="2"/>
+    <circle cx="95" cy="68" r="2"/>
+    <circle cx="100" cy="65" r="2"/>
+    <circle cx="80" cy="75" r="2"/>
+    <circle cx="85" cy="78" r="2"/>
+    <circle cx="90" cy="75" r="2"/>
+    <circle cx="95" cy="78" r="2"/>
+    <circle cx="100" cy="75" r="2"/>
+  </g>
+  
+  <!-- Ball -->
+  <circle cx="130" cy="45" r="8" fill="#E67E22"/>
+  <path d="M125 40 Q130 45 135 40" stroke="white" stroke-width="2" fill="none"/>
+  <path d="M125 50 Q130 45 135 50" stroke="white" stroke-width="2" fill="none"/>
+  
+  <!-- Text: "Meld je aan voor padellessen" -->
+  <text x="20" y="140" font-family="Arial, sans-serif" font-size="24" font-weight="bold" fill="white">Meld je aan</text>
+  <text x="20" y="170" font-family="Arial, sans-serif" font-size="24" font-weight="bold" fill="white">voor padellessen</text>
+  
+  <!-- Logo box background -->
+  <rect x="240" y="80" width="140" height="60" fill="white" rx="5"/>
+  
+  <!-- LTC text -->
+  <text x="250" y="105" font-family="Arial, sans-serif" font-size="20" font-weight="bold" fill="#5B2C87">LTC</text>
+  <text x="250" y="125" font-family="Arial, sans-serif" font-size="12" font-weight="normal" fill="#E67E22">de</text>
+  
+  <!-- Kei text -->
+  <text x="290" y="115" font-family="Arial, sans-serif" font-size="28" font-weight="bold" fill="#5B2C87">Kei</text>
+  
+  <!-- Small ball in logo -->
+  <circle cx="360" cy="95" r="6" fill="#E67E22"/>
+  <path d="M357 92 Q360 95 363 92" stroke="white" stroke-width="1.5" fill="none"/>
+  <path d="M357 98 Q360 95 363 98" stroke="white" stroke-width="1.5" fill="none"/>
+</svg>

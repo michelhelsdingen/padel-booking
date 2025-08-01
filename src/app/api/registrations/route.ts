@@ -10,16 +10,27 @@ export async function POST(request: NextRequest) {
     // Validate request data
     const validatedData = completeRegistrationSchema.parse(body)
     
-    // Check if registration period is active
-    const activeRegistration = await prisma.registrationPeriod.findFirst({
+    // Check if registration period is active, create one if none exists
+    let activeRegistration = await prisma.registrationPeriod.findFirst({
       where: { isActive: true }
     })
     
     if (!activeRegistration) {
-      return NextResponse.json(
-        { error: 'Er is momenteel geen actieve inschrijfperiode' },
-        { status: 400 }
-      )
+      // Auto-create an active registration period
+      const now = new Date()
+      const registrationEnd = new Date(now.getTime() + (30 * 24 * 60 * 60 * 1000)) // 30 days
+      const lotteryDate = new Date(registrationEnd.getTime() + (1 * 24 * 60 * 60 * 1000)) // 1 day after
+
+      activeRegistration = await prisma.registrationPeriod.create({
+        data: {
+          name: `Inschrijfperiode ${now.toLocaleDateString('nl-NL')}`,
+          registrationStart: now,
+          registrationEnd: registrationEnd,
+          lotteryDate: lotteryDate,
+          isActive: true,
+          description: 'Automatisch aangemaakte inschrijfperiode'
+        }
+      })
     }
     
     const now = new Date()
