@@ -246,18 +246,24 @@ export default function InschrijvenPage() {
   }
 
   // Simple debounce function
-  const debounce = (func: Function, wait: number) => {
+  const debounce = <T extends unknown[]>(func: (...args: T) => void, wait: number) => {
     let timeout: NodeJS.Timeout
-    return (...args: any[]) => {
+    return (...args: T) => {
       clearTimeout(timeout)
-      timeout = setTimeout(() => func.apply(null, args), wait)
+      timeout = setTimeout(() => func(...args), wait)
     }
   }
 
+  // Memoize checkEmailAvailability
+  const memoizedCheckEmailAvailability = useCallback(checkEmailAvailability, [])
+  
   // Debounced email check
   const debouncedEmailCheck = useCallback(
-    debounce((email: string) => checkEmailAvailability(email), 1000),
-    []
+    (email: string) => {
+      const debouncedFn = debounce((email: string) => memoizedCheckEmailAvailability(email), 1000)
+      debouncedFn(email)
+    },
+    [memoizedCheckEmailAvailability]
   )
 
   // Send edit code

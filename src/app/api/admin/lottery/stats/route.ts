@@ -1,5 +1,4 @@
 import { NextResponse } from 'next/server'
-import { getLotteryStatistics } from '@/lib/lottery'
 
 export async function GET() {
   try {

@@ -80,8 +80,8 @@ export async function POST(request: NextRequest) {
         lastName: fullTeam.lastName,
         contactEmail: fullTeam.contactEmail,
         members: fullTeam.members
-          .filter(member => member.email !== fullTeam.contactEmail) // Exclude contact person
-          .map(member => ({
+          .filter((member: { firstName: string; lastName: string; email: string }) => member.email !== fullTeam.contactEmail) // Exclude contact person
+          .map((member: { firstName: string; lastName: string; email: string }) => ({
             firstName: member.firstName,
             lastName: member.lastName,
             email: member.email || ''
@@ -89,11 +89,11 @@ export async function POST(request: NextRequest) {
       },
       preferences: {
         preferences: fullTeam.preferences
-          .map(pref => ({
+          .map((pref: { timeslotId: string; priority: number }) => ({
             timeslotId: pref.timeslotId,
             priority: pref.priority
           }))
-          .sort((a, b) => a.priority - b.priority)
+          .sort((a: { priority: number }, b: { priority: number }) => a.priority - b.priority)
       }
     }
 

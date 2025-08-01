@@ -134,8 +134,8 @@ export async function runOptimizedLottery(): Promise<LotteryResult> {
   // Flatten preferences for easier processing
   const allPreferences: TeamPreference[] = []
   teamsData.forEach(team => {
-    team.preferences.forEach((pref: any) => {
-      if (pref.timeslot && pref.timeslot.isActive) {
+    team.preferences.forEach((pref) => {
+      if (pref.timeslot && Array.isArray(pref.timeslot) && pref.timeslot[0]?.isActive) {
         allPreferences.push({
           teamId: team.id,
           timeslotId: pref.timeslotId,
@@ -147,7 +147,7 @@ export async function runOptimizedLottery(): Promise<LotteryResult> {
             contactEmail: team.contactEmail,
             memberCount: team.memberCount
           },
-          timeslot: pref.timeslot
+          timeslot: Array.isArray(pref.timeslot) ? pref.timeslot[0] : pref.timeslot
         })
       }
     })

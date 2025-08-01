@@ -1,6 +1,82 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+
+// Type definitions
+interface LotteryStatistics {
+  totalTeams: number
+  assignedTeams: number
+  unassignedTeams: number
+  assignmentsByMethod: Record<string, number>
+  assignmentsByDay: Record<number, number>
+  timeslotUtilization: Record<string, { assigned: number; capacity: number; utilization: number }>
+  emailStats: { sent: number; pending: number }
+}
+
+interface TeamInfo {
+  id: string
+  firstName: string
+  lastName: string
+  contactEmail: string
+  memberCount: number
+}
+
+interface TimeslotInfo {
+  id: string
+  dayOfWeek: number
+  startTime: string
+  endTime: string
+  maxTeams: number
+}
+
+interface AssignmentInfo {
+  id: string
+  teamId: string
+  timeslotId: string
+  assignedAt: string
+  lotteryRound: number
+  assignmentmethod: string
+  emailsent: boolean
+  emailsentat: string | null
+  priority: number
+  teams: TeamInfo
+  timeslots: TimeslotInfo
+}
+
+interface TimeslotDetail {
+  id: string
+  dayOfWeek: number
+  startTime: string
+  endTime: string
+  maxTeams: number
+  assignedTeams: Array<{
+    id: string
+    firstName: string
+    lastName: string
+    contactEmail: string
+    memberCount: number
+    assignmentMethod: string
+    priority: number
+    emailSent: boolean
+    emailSentAt: string | null
+  }>
+}
+
+interface UnassignedTeam {
+  id: string
+  firstName: string
+  lastName: string
+  contactEmail: string
+  reason: string
+}
+
+interface LotteryResults {
+  assignments: AssignmentInfo[]
+  unassignedTeams: UnassignedTeam[]
+  statistics: LotteryStatistics
+  timeslotDetails: TimeslotDetail[]
+  hasResults: boolean
+}
 import { Play, BarChart3, Users, Calendar, Mail, Settings, RefreshCw, Trash2, UserPlus } from 'lucide-react'
 import { formatTimeslot, DAYS_OF_WEEK } from '@/lib/utils'
 
@@ -79,7 +155,7 @@ export default function AdminPage() {
   })
   
   const [showLotteryModal, setShowLotteryModal] = useState(false)
-  const [lotteryResults, setLotteryResults] = useState<any>(null)
+  const [lotteryResults, setLotteryResults] = useState<LotteryResults | null>(null)
   const [showResultsModal, setShowResultsModal] = useState(false)
   const [selectedTeamsForEmail, setSelectedTeamsForEmail] = useState<string[]>([])
   const [isSendingEmails, setIsSendingEmails] = useState(false)
@@ -327,7 +403,7 @@ export default function AdminPage() {
         const error = await response.json()
         alert(`Fout: ${error.message}`)
       }
-    } catch (error) {
+    } catch {
       alert('Er is een fout opgetreden bij het opslaan')
     }
   }
@@ -351,7 +427,7 @@ export default function AdminPage() {
         const error = await response.json()
         alert(`Fout: ${error.message}`)
       }
-    } catch (error) {
+    } catch {
       alert('Er is een fout opgetreden bij het opslaan')
     }
   }
@@ -376,7 +452,7 @@ export default function AdminPage() {
         const error = await response.json()
         alert(`Fout: ${error.message}`)
       }
-    } catch (error) {
+    } catch {
       alert('Er is een fout opgetreden bij het opslaan')
     }
   }
@@ -1019,7 +1095,7 @@ export default function AdminPage() {
 
 // Lottery Results Modal Component
 function LotteryResultsModal({ results, onClose, onSendEmails, selectedTeams, onTeamSelectionChange, isSendingEmails }: {
-  results: any
+  results: LotteryResults
   onClose: () => void
   onSendEmails: (teamIds: string[], emailType: string) => void
   selectedTeams: string[]
@@ -1038,13 +1114,13 @@ function LotteryResultsModal({ results, onClose, onSendEmails, selectedTeams, on
 
   const selectAllAssigned = () => {
     const assignedTeamIds = results.timeslotDetails
-      .flatMap((slot: any) => slot.assignedTeams)
-      .map((team: any) => team.id)
+      .flatMap((slot: TimeslotDetail) => slot.assignedTeams)
+      .map((team) => team.id)
     onTeamSelectionChange(assignedTeamIds)
   }
 
   const selectAllUnassigned = () => {
-    const unassignedTeamIds = results.unassignedTeams.map((team: any) => team.id)
+    const unassignedTeamIds = results.unassignedTeams.map((team) => team.id)
     onTeamSelectionChange(unassignedTeamIds)
   }
 
@@ -1097,7 +1173,7 @@ function LotteryResultsModal({ results, onClose, onSendEmails, selectedTeams, on
           ].map(tab => (
             <button
               key={tab.id}
-              onClick={() => setActiveTab(tab.id as any)}
+              onClick={() => setActiveTab(tab.id as 'overview' | 'assignments' | 'emails')}
               className={`flex items-center space-x-2 px-6 py-4 text-sm font-medium transition-colors ${
                 activeTab === tab.id
                   ? 'border-b-2 border-blue-500 text-blue-600 bg-blue-50'
@@ -1153,7 +1229,7 @@ function LotteryResultsModal({ results, onClose, onSendEmails, selectedTeams, on
               <div className="bg-white border rounded-lg p-4">
                 <h3 className="font-bold text-lg mb-3">Tijdslot Bezetting</h3>
                 <div className="space-y-3">
-                  {results.timeslotDetails.map((slot: any) => {
+                  {results.timeslotDetails.map((slot) => {
                     const utilization = results.statistics.timeslotUtilization[slot.id]
                     return (
                       <div key={slot.id} className="flex items-center justify-between p-3 bg-gray-50 rounded">
@@ -1190,7 +1266,7 @@ function LotteryResultsModal({ results, onClose, onSendEmails, selectedTeams, on
               <div>
                 <h3 className="font-bold text-lg mb-4">Toegewezen Teams per Tijdslot</h3>
                 <div className="space-y-4">
-                  {results.timeslotDetails.map((slot: any) => (
+                  {results.timeslotDetails.map((slot) => (
                     <div key={slot.id} className="border rounded-lg p-4">
                       <div className="flex items-center justify-between mb-3">
                         <h4 className="font-medium text-lg">
@@ -1202,7 +1278,7 @@ function LotteryResultsModal({ results, onClose, onSendEmails, selectedTeams, on
                       </div>
                       {slot.assignedTeams.length > 0 ? (
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-                          {slot.assignedTeams.map((team: any) => (
+                          {slot.assignedTeams.map((team) => (
                             <div key={team.id} className="flex items-center justify-between p-2 bg-gray-50 rounded">
                               <div>
                                 <span className="font-medium">{team.firstName} {team.lastName}</span>
@@ -1237,7 +1313,7 @@ function LotteryResultsModal({ results, onClose, onSendEmails, selectedTeams, on
                 <div className="border rounded-lg p-4 bg-orange-50 border-orange-200">
                   <h3 className="font-bold text-lg mb-3 text-orange-900">Wachtlijst ({results.unassignedTeams.length} teams)</h3>
                   <div className="space-y-2">
-                    {results.unassignedTeams.map((team: any) => (
+                    {results.unassignedTeams.map((team) => (
                       <div key={team.id} className="flex items-center justify-between p-2 bg-white rounded">
                         <span className="font-medium">{team.firstName} {team.lastName}</span>
                         <span className="text-sm text-orange-600">{team.reason}</span>
@@ -1331,8 +1407,8 @@ function LotteryResultsModal({ results, onClose, onSendEmails, selectedTeams, on
                 <h3 className="font-bold text-lg mb-4">Team Selectie</h3>
                 <div className="space-y-2 max-h-60 overflow-y-auto">
                   {/* Assigned Teams */}
-                  {results.timeslotDetails.map((slot: any) => 
-                    slot.assignedTeams.map((team: any) => (
+                  {results.timeslotDetails.map((slot) => 
+                    slot.assignedTeams.map((team) => (
                       <div key={team.id} className="flex items-center justify-between p-2 hover:bg-gray-50 rounded">
                         <div className="flex items-center space-x-3">
                           <input
@@ -1361,7 +1437,7 @@ function LotteryResultsModal({ results, onClose, onSendEmails, selectedTeams, on
                   )}
                   
                   {/* Unassigned Teams */}
-                  {results.unassignedTeams.map((team: any) => (
+                  {results.unassignedTeams.map((team) => (
                     <div key={team.id} className="flex items-center justify-between p-2 hover:bg-gray-50 rounded">
                       <div className="flex items-center space-x-3">
                         <input
@@ -2040,7 +2116,7 @@ function LotteryWarningModal({ onClose, onConfirm, isRunning, existingLotterySta
   onClose: () => void
   onConfirm: () => void
   isRunning: boolean
-  existingLotteryStats?: any
+  existingLotteryStats?: LotteryStatistics
 }) {
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
