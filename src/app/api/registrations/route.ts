@@ -121,18 +121,29 @@ export async function POST(request: NextRequest) {
     }
     
     // Check if team email is already registered
-    const { data: existingTeam } = await supabaseAdmin
+    console.log('Checking for existing email:', validatedData.team.contactEmail)
+    const { data: existingTeam, error: checkError } = await supabaseAdmin
       .from('teams')
-      .select('id')
+      .select('id, contactEmail')
       .eq('contactEmail', validatedData.team.contactEmail)
       .limit(1)
     
+    console.log('Existing team check result:', existingTeam)
+    console.log('Check error:', checkError)
+    
+    if (checkError) {
+      console.error('Error checking for existing team:', checkError)
+    }
+    
     if (existingTeam && existingTeam.length > 0) {
+      console.log('Found existing team with this email:', existingTeam[0])
       return NextResponse.json(
         { error: 'Dit e-mailadres is al geregistreerd' },
         { status: 400 }
       )
     }
+    
+    console.log('No existing team found, proceeding with registration')
     
     // Validate timeslots exist
     const timeslotIds = validatedData.preferences.preferences.map(p => p.timeslotId)
@@ -167,6 +178,16 @@ export async function POST(request: NextRequest) {
       .single()
 
     if (teamError) {
+      console.error('Team creation error:', teamError)
+      
+      // Check if it's a unique constraint violation (duplicate email)
+      if (teamError.code === '23505' && teamError.message?.includes('contactEmail')) {
+        return NextResponse.json(
+          { error: 'Dit e-mailadres is al geregistreerd' },
+          { status: 400 }
+        )
+      }
+      
       throw teamError
     }
 
@@ -178,9 +199,7 @@ export async function POST(request: NextRequest) {
         teamId: team.id,
         firstName: validatedData.team.firstName,
         lastName: validatedData.team.lastName,
-        email: validatedData.team.contactEmail,
-        createdAt: timestamp,
-        updatedAt: timestamp
+        email: validatedData.team.contactEmail
       },
       // Add other members
       ...validatedData.team.members.map(member => ({
@@ -188,9 +207,7 @@ export async function POST(request: NextRequest) {
         teamId: team.id,
         firstName: member.firstName,
         lastName: member.lastName,
-        email: member.email,
-        createdAt: timestamp,
-        updatedAt: timestamp
+        email: member.email
       }))
     ]
 
@@ -207,9 +224,7 @@ export async function POST(request: NextRequest) {
       id: uuidv4(),
       teamId: team.id,
       timeslotId: pref.timeslotId,
-      priority: pref.priority,
-      createdAt: timestamp,
-      updatedAt: timestamp
+      priority: pref.priority
     }))
 
     const { error: preferencesError } = await supabaseAdmin

@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Play, BarChart3, Users, Calendar, Mail, Settings, RefreshCw } from 'lucide-react'
+import { Play, BarChart3, Users, Calendar, Mail, Settings, RefreshCw, Trash2, UserPlus } from 'lucide-react'
 import { formatTimeslot, DAYS_OF_WEEK } from '@/lib/utils'
 
 interface Team {
@@ -18,6 +18,14 @@ interface Team {
   }>
   preferences: Array<{
     priority: number
+    timeslot: {
+      id: string
+      dayOfWeek: number
+      startTime: string
+      endTime: string
+    }
+  }>
+  assignments?: Array<{
     timeslot: {
       id: string
       dayOfWeek: number
@@ -55,6 +63,9 @@ export default function AdminPage() {
   const [showPeriodModal, setShowPeriodModal] = useState(false)
   const [showTemplateModal, setShowTemplateModal] = useState(false)
   const [showTimeslotConfigModal, setShowTimeslotConfigModal] = useState(false)
+  const [showClearTeamsModal, setShowClearTeamsModal] = useState(false)
+  const [isClearing, setIsClearing] = useState(false)
+  const [isGeneratingDummy, setIsGeneratingDummy] = useState(false)
 
   useEffect(() => {
     loadTeams()
@@ -242,6 +253,51 @@ export default function AdminPage() {
     }
   }
 
+  const clearAllTeams = async () => {
+    setIsClearing(true)
+    try {
+      const response = await fetch('/api/admin/teams/clear', { method: 'POST' })
+      if (response.ok) {
+        const result = await response.json()
+        alert(`Alle teams zijn succesvol verwijderd! ${result.deletedCount} teams verwijderd.`)
+        setShowClearTeamsModal(false)
+        loadTeams()
+        loadLotteryStats()
+        loadTimeslots() // Refresh to update preference counts
+      } else {
+        const error = await response.json()
+        alert(`Fout bij verwijderen: ${error.message}`)
+      }
+    } catch (error) {
+      alert('Er is een fout opgetreden bij het verwijderen van teams')
+      console.error('Clear teams error:', error)
+    } finally {
+      setIsClearing(false)
+    }
+  }
+
+  const generateDummyData = async () => {
+    setIsGeneratingDummy(true)
+    try {
+      const response = await fetch('/api/admin/teams/dummy', { method: 'POST' })
+      if (response.ok) {
+        const result = await response.json()
+        alert(`Dummy data succesvol aangemaakt! ${result.createdCount} teams toegevoegd.`)
+        loadTeams()
+        loadLotteryStats()
+        loadTimeslots() // Refresh to update preference counts
+      } else {
+        const error = await response.json()
+        alert(`Fout bij aanmaken dummy data: ${error.message}`)
+      }
+    } catch (error) {
+      alert('Er is een fout opgetreden bij het aanmaken van dummy data')
+      console.error('Generate dummy data error:', error)
+    } finally {
+      setIsGeneratingDummy(false)
+    }
+  }
+
   return (
     <div className="min-h-screen bg-gray-100">
       <div className="bg-white shadow-sm border-b">
@@ -289,46 +345,78 @@ export default function AdminPage() {
 
       <div className="container mx-auto px-4 py-8">
         {activeTab === 'overview' && (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-            <div className="bg-white p-6 rounded-lg shadow">
-              <div className="flex items-center">
-                <Users className="h-8 w-8 text-blue-600" />
-                <div className="ml-4">
-                  <p className="text-base font-bold text-gray-900">Totaal Teams</p>
-                  <p className="text-2xl font-bold text-gray-900">{teams.length}</p>
+          <div className="space-y-8">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+              <div className="bg-white p-6 rounded-lg shadow">
+                <div className="flex items-center">
+                  <Users className="h-8 w-8 text-blue-600" />
+                  <div className="ml-4">
+                    <p className="text-base font-bold text-gray-900">Totaal Teams</p>
+                    <p className="text-2xl font-bold text-gray-900">{teams.length}</p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-white p-6 rounded-lg shadow">
+                <div className="flex items-center">
+                  <Calendar className="h-8 w-8 text-green-600" />
+                  <div className="ml-4">
+                    <p className="text-base font-bold text-gray-900">Toegewezen</p>
+                    <p className="text-2xl font-bold text-gray-900">{lotteryStats?.assignedTeams || 0}</p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-white p-6 rounded-lg shadow">
+                <div className="flex items-center">
+                  <Mail className="h-8 w-8 text-purple-600" />
+                  <div className="ml-4">
+                    <p className="text-base font-bold text-gray-900">Niet toegewezen</p>
+                    <p className="text-2xl font-bold text-gray-900">{lotteryStats?.unassignedTeams || 0}</p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-white p-6 rounded-lg shadow">
+                <div className="flex items-center">
+                  <BarChart3 className="h-8 w-8 text-orange-600" />
+                  <div className="ml-4">
+                    <p className="text-base font-bold text-gray-900">Succesvol %</p>
+                    <p className="text-2xl font-bold text-gray-900">
+                      {lotteryStats?.totalTeams ? Math.round((lotteryStats.assignedTeams / lotteryStats.totalTeams) * 100) : 0}%
+                    </p>
+                  </div>
                 </div>
               </div>
             </div>
 
-            <div className="bg-white p-6 rounded-lg shadow">
-              <div className="flex items-center">
-                <Calendar className="h-8 w-8 text-green-600" />
-                <div className="ml-4">
-                  <p className="text-base font-bold text-gray-900">Toegewezen</p>
-                  <p className="text-2xl font-bold text-gray-900">{lotteryStats?.assignedTeams || 0}</p>
+            {/* Team Management Info Panel */}
+            <div className="bg-white rounded-lg shadow p-6">
+              <h3 className="text-lg font-bold text-gray-900 mb-4">Team Beheer Tools</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="flex items-start space-x-3">
+                  <UserPlus className="h-6 w-6 text-green-600 mt-1" />
+                  <div>
+                    <h4 className="font-bold text-gray-900">Dummy Data Aanmaken</h4>
+                    <p className="text-sm text-gray-700 mt-1">
+                      Genereer 12-15 realistische Nederlandse teams met 2-4 spelers per team en willekeurige tijdslot voorkeuren voor het testen van de loting.
+                    </p>
+                  </div>
+                </div>
+                <div className="flex items-start space-x-3">
+                  <Trash2 className="h-6 w-6 text-red-600 mt-1" />
+                  <div>
+                    <h4 className="font-bold text-gray-900">Alle Teams Verwijderen</h4>
+                    <p className="text-sm text-gray-700 mt-1">
+                      Verwijder alle teams, leden, voorkeuren en toewijzingen uit het systeem. Dit reset het systeem volledig voor nieuwe inschrijfperiodes.
+                    </p>
+                  </div>
                 </div>
               </div>
-            </div>
-
-            <div className="bg-white p-6 rounded-lg shadow">
-              <div className="flex items-center">
-                <Mail className="h-8 w-8 text-purple-600" />
-                <div className="ml-4">
-                  <p className="text-base font-bold text-gray-900">Niet toegewezen</p>
-                  <p className="text-2xl font-bold text-gray-900">{lotteryStats?.unassignedTeams || 0}</p>
-                </div>
-              </div>
-            </div>
-
-            <div className="bg-white p-6 rounded-lg shadow">
-              <div className="flex items-center">
-                <BarChart3 className="h-8 w-8 text-orange-600" />
-                <div className="ml-4">
-                  <p className="text-base font-bold text-gray-900">Succesvol %</p>
-                  <p className="text-2xl font-bold text-gray-900">
-                    {lotteryStats?.totalTeams ? Math.round((lotteryStats.assignedTeams / lotteryStats.totalTeams) * 100) : 0}%
-                  </p>
-                </div>
+              <div className="mt-4 p-3 bg-blue-50 rounded-lg">
+                <p className="text-sm text-blue-800">
+                  <strong>Tip:</strong> Gebruik deze tools via het &apos;Teams&apos; tabblad om het systeem snel te resetten en testdata aan te maken voor het testen van de loting functionaliteit.
+                </p>
               </div>
             </div>
           </div>
@@ -337,63 +425,134 @@ export default function AdminPage() {
         {activeTab === 'teams' && (
           <div className="bg-white rounded-lg shadow">
             <div className="p-6 border-b">
-              <h2 className="text-2xl font-bold text-gray-900">Ingeschreven Teams</h2>
+              <div className="flex items-center justify-between">
+                <h2 className="text-2xl font-bold text-gray-900">Ingeschreven Teams</h2>
+                <div className="flex space-x-4">
+                  <button
+                    onClick={generateDummyData}
+                    disabled={isGeneratingDummy}
+                    className="flex items-center space-x-2 bg-green-600 hover:bg-green-700 disabled:bg-gray-400 text-white px-4 py-2 rounded-lg transition-colors"
+                  >
+                    <UserPlus className="h-4 w-4" />
+                    <span>{isGeneratingDummy ? 'Bezig...' : 'Dummy Data Aanmaken'}</span>
+                  </button>
+                  <button
+                    onClick={() => setShowClearTeamsModal(true)}
+                    className="flex items-center space-x-2 bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg transition-colors"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                    <span>Alle Teams Verwijderen</span>
+                  </button>
+                </div>
+              </div>
             </div>
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead className="bg-gray-50">
-                  <tr>
-                    <th className="px-6 py-3 text-left text-sm font-bold text-gray-900 uppercase tracking-wider">
-                      Team
-                    </th>
-                    <th className="px-6 py-3 text-left text-sm font-bold text-gray-900 uppercase tracking-wider">
-                      Contact
-                    </th>
-                    <th className="px-6 py-3 text-left text-sm font-bold text-gray-900 uppercase tracking-wider">
-                      Leden
-                    </th>
-                    <th className="px-6 py-3 text-left text-sm font-bold text-gray-900 uppercase tracking-wider">
-                      Voorkeuren
-                    </th>
-                    <th className="px-6 py-3 text-left text-sm font-bold text-gray-900 uppercase tracking-wider">
-                      Ingeschreven
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
-                  {teams.map(team => (
-                    <tr key={team.id} className="hover:bg-gray-50">
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="font-bold text-gray-900">{team.firstName} {team.lastName}</div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm font-medium text-gray-900">{team.contactEmail}</div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm font-medium text-gray-900">{team.memberCount} spelers</div>
-                      </td>
-                      <td className="px-6 py-4">
-                        <div className="text-sm text-gray-900">
-                          {team.preferences
-                            .sort((a, b) => a.priority - b.priority)
-                            .map(pref => (
-                              <div key={pref.timeslot.id} className="mb-1">
-                                <span className="inline-block bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded mr-1">
-                                  #{pref.priority}
-                                </span>
-                                {formatTimeslot(pref.timeslot.dayOfWeek, pref.timeslot.startTime, pref.timeslot.endTime)}
-                              </div>
-                            ))}
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
-                        {new Date(team.createdAt).toLocaleDateString('nl-NL')}
-                      </td>
+            {teams.length === 0 ? (
+              <div className="text-center py-12">
+                <Users className="mx-auto h-12 w-12 text-gray-400" />
+                <h3 className="mt-2 text-sm font-bold text-gray-900">Geen teams ingeschreven</h3>
+                <p className="mt-1 text-sm text-gray-500">
+                  Er zijn nog geen teams ingeschreven voor deze periode.
+                </p>
+                <div className="mt-6">
+                  <button
+                    onClick={generateDummyData}
+                    disabled={isGeneratingDummy}
+                    className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-bold rounded-md shadow-sm text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:bg-gray-400"
+                  >
+                    <UserPlus className="h-4 w-4 mr-2" />
+                    {isGeneratingDummy ? 'Bezig...' : 'Dummy Data Aanmaken'}
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead className="bg-gray-50">
+                    <tr>
+                      <th className="px-6 py-3 text-left text-sm font-bold text-gray-900 uppercase tracking-wider">
+                        Team
+                      </th>
+                      <th className="px-6 py-3 text-left text-sm font-bold text-gray-900 uppercase tracking-wider">
+                        Contact
+                      </th>
+                      <th className="px-6 py-3 text-left text-sm font-bold text-gray-900 uppercase tracking-wider">
+                        Leden
+                      </th>
+                      <th className="px-6 py-3 text-left text-sm font-bold text-gray-900 uppercase tracking-wider">
+                        Voorkeuren
+                      </th>
+                      <th className="px-6 py-3 text-left text-sm font-bold text-gray-900 uppercase tracking-wider">
+                        Status
+                      </th>
+                      <th className="px-6 py-3 text-left text-sm font-bold text-gray-900 uppercase tracking-wider">
+                        Ingeschreven
+                      </th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                  </thead>
+                  <tbody className="bg-white divide-y divide-gray-200">
+                    {teams.map(team => (
+                      <tr key={team.id} className="hover:bg-gray-50">
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="font-bold text-gray-900">{team.firstName} {team.lastName}</div>
+                          <div className="text-sm text-gray-500">Team ID: {team.id.slice(-8)}</div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="text-sm font-medium text-gray-900">{team.contactEmail}</div>
+                          <div className="text-xs text-gray-500 mt-1">
+                            {team.members.slice(1).map(member => 
+                              `${member.firstName} ${member.lastName}`
+                            ).join(', ')}
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="text-sm font-medium text-gray-900">{team.memberCount} spelers</div>
+                          <div className="text-xs text-gray-500">
+                            {team.members.map(member => member.firstName).join(', ')}
+                          </div>
+                        </td>
+                        <td className="px-6 py-4">
+                          <div className="text-sm text-gray-900">
+                            {team.preferences
+                              .sort((a, b) => a.priority - b.priority)
+                              .map(pref => (
+                                <div key={pref.timeslot.id} className="mb-1">
+                                  <span className="inline-block bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded mr-1">
+                                    #{pref.priority}
+                                  </span>
+                                  {formatTimeslot(pref.timeslot.dayOfWeek, pref.timeslot.startTime, pref.timeslot.endTime)}
+                                </div>
+                              ))}
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          {team.assignments && team.assignments.length > 0 ? (
+                            <div>
+                              <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-green-100 text-green-800">
+                                Toegewezen
+                              </span>
+                              <div className="text-xs text-gray-600 mt-1">
+                                {formatTimeslot(
+                                  team.assignments[0].timeslot.dayOfWeek,
+                                  team.assignments[0].timeslot.startTime,
+                                  team.assignments[0].timeslot.endTime
+                                )}
+                              </div>
+                            </div>
+                          ) : (
+                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-yellow-100 text-yellow-800">
+                              Wachtlijst
+                            </span>
+                          )}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
+                          {new Date(team.createdAt).toLocaleDateString('nl-NL')}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
           </div>
         )}
 
@@ -595,6 +754,16 @@ export default function AdminPage() {
           <TimeslotConfigModal 
             onClose={() => setShowTimeslotConfigModal(false)}
             onSave={handleTimeslotConfigSave}
+          />
+        )}
+
+        {/* Clear All Teams Confirmation Modal */}
+        {showClearTeamsModal && (
+          <ClearTeamsModal 
+            onClose={() => setShowClearTeamsModal(false)}
+            onConfirm={clearAllTeams}
+            isClearing={isClearing}
+            teamCount={teams.length}
           />
         )}
       </div>
@@ -1026,6 +1195,80 @@ function TimeslotConfigModal({ onClose, onSave }: {
             </button>
           </div>
         </form>
+      </div>
+    </div>
+  )
+}
+
+// Clear All Teams Confirmation Modal Component
+function ClearTeamsModal({ onClose, onConfirm, isClearing, teamCount }: { 
+  onClose: () => void
+  onConfirm: () => void
+  isClearing: boolean
+  teamCount: number
+}) {
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+      <div className="bg-white rounded-lg p-6 w-full max-w-md">
+        <div className="flex items-center justify-between mb-6">
+          <h3 className="text-xl font-bold text-red-900">Alle Teams Verwijderen</h3>
+          <button
+            onClick={onClose}
+            className="text-gray-400 hover:text-gray-600"
+            disabled={isClearing}
+          >
+            ✕
+          </button>
+        </div>
+
+        <div className="mb-6">
+          <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-4">
+            <div className="flex items-center">
+              <div className="flex-shrink-0">
+                <Trash2 className="h-5 w-5 text-red-600" />
+              </div>
+              <div className="ml-3">
+                <h3 className="text-sm font-bold text-red-800">
+                  Let op: Deze actie kan niet ongedaan worden gemaakt!
+                </h3>
+              </div>
+            </div>
+          </div>
+          <p className="text-base font-medium text-gray-900 mb-2">
+            Je staat op het punt om <strong>{teamCount} teams</strong> te verwijderen.
+          </p>
+          <p className="text-sm text-gray-700 mb-4">
+            Dit zal het volgende verwijderen:
+          </p>
+          <ul className="text-sm text-gray-700 space-y-1 mb-4">
+            <li>• Alle ingeschreven teams</li>
+            <li>• Alle teamleden</li>
+            <li>• Alle voorkeuren</li>
+            <li>• Alle toewijzingen</li>
+            <li>• Alle loting gegevens</li>
+          </ul>
+          <p className="text-sm font-bold text-red-700">
+            Het systeem wordt volledig leeggemaakt voor nieuwe inschrijvingen.
+          </p>
+        </div>
+
+        <div className="flex space-x-4">
+          <button
+            type="button"
+            onClick={onClose}
+            disabled={isClearing}
+            className="flex-1 px-4 py-2 text-gray-700 bg-gray-200 rounded-lg hover:bg-gray-300 transition-colors disabled:bg-gray-100"
+          >
+            Annuleren
+          </button>
+          <button
+            onClick={onConfirm}
+            disabled={isClearing || teamCount === 0}
+            className="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors disabled:bg-gray-400"
+          >
+            {isClearing ? 'Bezig met verwijderen...' : `Ja, verwijder ${teamCount} teams`}
+          </button>
+        </div>
       </div>
     </div>
   )
