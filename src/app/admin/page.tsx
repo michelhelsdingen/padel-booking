@@ -119,7 +119,7 @@ export default function AdminPage() {
       <div className="bg-white shadow-sm border-b">
         <div className="container mx-auto px-4">
           <div className="flex items-center justify-between py-4">
-            <h1 className="text-2xl font-bold text-gray-900">Admin Dashboard</h1>
+            <h1 className="text-3xl font-bold text-gray-900">Admin Dashboard</h1>
             <div className="flex items-center space-x-4">
               <button
                 onClick={loadTeams}
@@ -165,7 +165,7 @@ export default function AdminPage() {
               <div className="flex items-center">
                 <Users className="h-8 w-8 text-blue-600" />
                 <div className="ml-4">
-                  <p className="text-sm font-semibold text-gray-700">Totaal Teams</p>
+                  <p className="text-base font-bold text-gray-900">Totaal Teams</p>
                   <p className="text-2xl font-bold text-gray-900">{teams.length}</p>
                 </div>
               </div>
@@ -175,7 +175,7 @@ export default function AdminPage() {
               <div className="flex items-center">
                 <Calendar className="h-8 w-8 text-green-600" />
                 <div className="ml-4">
-                  <p className="text-sm font-semibold text-gray-700">Toegewezen</p>
+                  <p className="text-base font-bold text-gray-900">Toegewezen</p>
                   <p className="text-2xl font-bold text-gray-900">{lotteryStats?.assignedTeams || 0}</p>
                 </div>
               </div>
@@ -185,7 +185,7 @@ export default function AdminPage() {
               <div className="flex items-center">
                 <Mail className="h-8 w-8 text-purple-600" />
                 <div className="ml-4">
-                  <p className="text-sm font-semibold text-gray-700">Niet toegewezen</p>
+                  <p className="text-base font-bold text-gray-900">Niet toegewezen</p>
                   <p className="text-2xl font-bold text-gray-900">{lotteryStats?.unassignedTeams || 0}</p>
                 </div>
               </div>
@@ -195,7 +195,7 @@ export default function AdminPage() {
               <div className="flex items-center">
                 <BarChart3 className="h-8 w-8 text-orange-600" />
                 <div className="ml-4">
-                  <p className="text-sm font-semibold text-gray-700">Succesvol %</p>
+                  <p className="text-base font-bold text-gray-900">Succesvol %</p>
                   <p className="text-2xl font-bold text-gray-900">
                     {lotteryStats?.totalTeams ? Math.round((lotteryStats.assignedTeams / lotteryStats.totalTeams) * 100) : 0}%
                   </p>
@@ -208,25 +208,25 @@ export default function AdminPage() {
         {activeTab === 'teams' && (
           <div className="bg-white rounded-lg shadow">
             <div className="p-6 border-b">
-              <h2 className="text-xl font-semibold">Ingeschreven Teams</h2>
+              <h2 className="text-2xl font-bold text-gray-900">Ingeschreven Teams</h2>
             </div>
             <div className="overflow-x-auto">
               <table className="w-full">
                 <thead className="bg-gray-50">
                   <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="px-6 py-3 text-left text-sm font-bold text-gray-900 uppercase tracking-wider">
                       Team
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="px-6 py-3 text-left text-sm font-bold text-gray-900 uppercase tracking-wider">
                       Contact
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="px-6 py-3 text-left text-sm font-bold text-gray-900 uppercase tracking-wider">
                       Leden
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="px-6 py-3 text-left text-sm font-bold text-gray-900 uppercase tracking-wider">
                       Voorkeuren
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="px-6 py-3 text-left text-sm font-bold text-gray-900 uppercase tracking-wider">
                       Ingeschreven
                     </th>
                   </tr>
@@ -235,13 +235,13 @@ export default function AdminPage() {
                   {teams.map(team => (
                     <tr key={team.id} className="hover:bg-gray-50">
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="font-medium text-gray-900">{team.name}</div>
+                        <div className="font-bold text-gray-900">{team.name}</div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm text-gray-900">{team.contactEmail}</div>
+                        <div className="text-sm font-medium text-gray-900">{team.contactEmail}</div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm text-gray-900">{team.memberCount} spelers</div>
+                        <div className="text-sm font-medium text-gray-900">{team.memberCount} spelers</div>
                       </td>
                       <td className="px-6 py-4">
                         <div className="text-sm text-gray-900">
@@ -272,7 +272,7 @@ export default function AdminPage() {
           <div className="space-y-6">
             <div className="bg-white rounded-lg shadow p-6">
               <div className="flex items-center justify-between mb-6">
-                <h2 className="text-xl font-semibold">Loting Beheer</h2>
+                <h2 className="text-2xl font-bold text-gray-900">Loting Beheer</h2>
                 <div className="flex space-x-4">
                   <button
                     onClick={runLottery}
@@ -296,7 +296,7 @@ export default function AdminPage() {
               {lotteryStats && (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
-                    <h3 className="font-semibold mb-3">Toewijzingen per Ronde</h3>
+                    <h3 className="font-bold text-lg text-gray-900 mb-3">Toewijzingen per Ronde</h3>
                     <div className="space-y-2">
                       {Object.entries(lotteryStats.assignmentsByRound).map(([round, count]) => (
                         <div key={round} className="flex justify-between items-center p-2 bg-gray-50 rounded">
@@ -308,7 +308,7 @@ export default function AdminPage() {
                   </div>
 
                   <div>
-                    <h3 className="font-semibold mb-3">Toewijzingen per Dag</h3>
+                    <h3 className="font-bold text-lg text-gray-900 mb-3">Toewijzingen per Dag</h3>
                     <div className="space-y-2">
                       {Object.entries(lotteryStats.assignmentsByDay).map(([day, count]) => (
                         <div key={day} className="flex justify-between items-center p-2 bg-gray-50 rounded">
@@ -326,11 +326,11 @@ export default function AdminPage() {
 
         {activeTab === 'settings' && (
           <div className="bg-white rounded-lg shadow p-6">
-            <h2 className="text-xl font-semibold mb-6">Instellingen</h2>
+            <h2 className="text-2xl font-bold text-gray-900 mb-6">Instellingen</h2>
             <div className="space-y-6">
               <div>
-                <h3 className="font-medium mb-2">Inschrijfperiode</h3>
-                <p className="text-sm text-gray-700 mb-4">
+                <h3 className="font-bold text-lg text-gray-900 mb-2">Inschrijfperiode</h3>
+                <p className="text-base font-medium text-gray-900 mb-4">
                   Beheer wanneer teams zich kunnen inschrijven en wanneer de loting plaatsvindt.
                 </p>
                 <button className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors">
@@ -339,8 +339,8 @@ export default function AdminPage() {
               </div>
 
               <div>
-                <h3 className="font-medium mb-2">E-mail Templates</h3>
-                <p className="text-sm text-gray-700 mb-4">
+                <h3 className="font-bold text-lg text-gray-900 mb-2">E-mail Templates</h3>
+                <p className="text-base font-medium text-gray-900 mb-4">
                   Pas de e-mail templates aan voor bevestigingen en notificaties.
                 </p>
                 <button className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors">
@@ -349,8 +349,8 @@ export default function AdminPage() {
               </div>
 
               <div>
-                <h3 className="font-medium mb-2">Tijdslot Configuratie</h3>
-                <p className="text-sm text-gray-700 mb-4">
+                <h3 className="font-bold text-lg text-gray-900 mb-2">Tijdslot Configuratie</h3>
+                <p className="text-base font-medium text-gray-900 mb-4">
                   Beheer beschikbare tijdsloten en capaciteit per slot.
                 </p>
                 <button className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors">

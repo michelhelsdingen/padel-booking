@@ -67,7 +67,7 @@ export default function RoosterPage() {
       <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50 flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600 mx-auto mb-4"></div>
-          <p className="text-gray-700">Rooster laden...</p>
+          <p className="text-gray-900 font-medium">Rooster laden...</p>
         </div>
       </div>
     )
@@ -80,8 +80,8 @@ export default function RoosterPage() {
           <div className="text-red-500 mb-4">
             <Calendar className="h-12 w-12 mx-auto" />
           </div>
-          <h2 className="text-xl font-semibold mb-2">Fout bij laden rooster</h2>
-          <p className="text-gray-700 mb-4">{error}</p>
+          <h2 className="text-xl font-bold text-gray-900 mb-2">Fout bij laden rooster</h2>
+          <p className="text-gray-900 font-medium mb-4">{error}</p>
           <button 
             onClick={loadSchedule}
             className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors"
@@ -106,8 +106,8 @@ export default function RoosterPage() {
               
               <div className="text-center py-12">
                 <Calendar className="h-16 w-16 text-gray-400 mx-auto mb-4" />
-                <h2 className="text-xl font-semibold text-gray-600 mb-2">Nog geen rooster beschikbaar</h2>
-                <p className="text-gray-700 mb-6">
+                <h2 className="text-xl font-bold text-gray-900 mb-2">Nog geen rooster beschikbaar</h2>
+                <p className="text-gray-900 font-medium mb-6">
                   Het rooster wordt gepubliceerd na de loting. Check later terug of schrijf je team in!
                 </p>
                 <Link 
@@ -137,7 +137,7 @@ export default function RoosterPage() {
             <div className="mb-6 p-4 bg-blue-50 rounded-lg">
               <div className="flex items-center text-blue-800">
                 <Calendar className="h-5 w-5 mr-2" />
-                <span className="font-medium">
+                <span className="font-bold text-gray-900">
                   Rooster voor week {new Date().getWeek()} - Maandag t/m Vrijdag
                 </span>
               </div>
@@ -146,7 +146,7 @@ export default function RoosterPage() {
             <div className="grid gap-6">
               {[1, 2, 3, 4, 5].map(day => (
                 <div key={day} className="border rounded-lg p-6">
-                  <h2 className="text-xl font-semibold mb-4 flex items-center">
+                  <h2 className="text-xl font-bold text-gray-900 mb-4 flex items-center">
                     <Calendar className="h-5 w-5 mr-2 text-blue-600" />
                     {DAYS_OF_WEEK[day as keyof typeof DAYS_OF_WEEK]}
                   </h2>
@@ -163,7 +163,7 @@ export default function RoosterPage() {
                         <div key={startTime} className="bg-gray-50 rounded-lg p-4">
                           <div className="flex items-center mb-3">
                             <Clock className="h-4 w-4 mr-2 text-gray-600" />
-                            <span className="font-medium text-gray-800">
+                            <span className="font-bold text-gray-900">
                               {startTime} - {endTime}
                             </span>
                           </div>
@@ -180,7 +180,7 @@ export default function RoosterPage() {
                                       <h4 className="font-medium text-green-800">
                                         {assignment.team.name}
                                       </h4>
-                                      <div className="flex items-center text-sm text-gray-700 mt-1">
+                                      <div className="flex items-center text-sm text-gray-900 font-medium mt-1">
                                         <Users className="h-3 w-3 mr-1" />
                                         <span>{assignment.team.memberCount} spelers</span>
                                       </div>
@@ -198,7 +198,7 @@ export default function RoosterPage() {
                               ))}
                             </div>
                           ) : (
-                            <div className="text-center py-4 text-gray-600">
+                            <div className="text-center py-4 text-gray-800">
                               <div className="text-sm">Geen teams toegewezen</div>
                             </div>
                           )}
@@ -216,8 +216,8 @@ export default function RoosterPage() {
                   <Calendar className="h-4 w-4 text-blue-600" />
                 </div>
                 <div>
-                  <h3 className="font-semibold text-gray-800 mb-1">Belangrijk</h3>
-                  <ul className="text-sm text-gray-700 space-y-1">
+                  <h3 className="font-bold text-gray-900 mb-1">Belangrijk</h3>
+                  <ul className="text-sm text-gray-900 font-medium space-y-1">
                     <li>• Zorg dat je op tijd bent voor je training</li>
                     <li>• Bij wijzigingen neem je contact op met de beheerder</li>
                     <li>• Materiaal kun je ter plaatse huren indien beschikbaar</li>

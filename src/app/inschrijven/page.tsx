@@ -132,8 +132,8 @@ export default function InschrijvenPage() {
             <div className="bg-green-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
               <span className="text-2xl">✓</span>
             </div>
-            <h2 className="text-2xl font-bold text-green-600 mb-4">Inschrijving Gelukt!</h2>
-            <p className="text-gray-700 mb-6">
+            <h2 className="text-2xl font-bold text-green-700 mb-4">Inschrijving Gelukt!</h2>
+            <p className="text-gray-900 font-medium mb-6">
               Je team is succesvol ingeschreven. Je ontvangt binnenkort een bevestigingsmail 
               met alle details. De loting vindt plaats op de aangegeven datum.
             </p>
@@ -170,14 +170,14 @@ export default function InschrijvenPage() {
             <form onSubmit={handleSubmit(onSubmit)}>
               {step === 1 && (
                 <div>
-                  <h2 className="text-xl font-semibold mb-6">Stap 1: Team Informatie</h2>
+                  <h2 className="text-2xl font-bold text-gray-900 mb-6">Stap 1: Team Informatie</h2>
                   
                   <div className="space-y-4">
                     <div>
-                      <label className="block text-sm font-semibold text-gray-800 mb-2">Teamnaam *</label>
+                      <label className="block text-base font-bold text-gray-900 mb-2">Teamnaam *</label>
                       <input
                         {...register('team.teamName')}
-                        className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                        className="w-full p-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent font-medium text-gray-900 placeholder-gray-500"
                         placeholder="Bijv. Team Awesome"
                       />
                       {errors.team?.teamName && (
@@ -186,11 +186,11 @@ export default function InschrijvenPage() {
                     </div>
 
                     <div>
-                      <label className="block text-sm font-semibold text-gray-800 mb-2">Contact E-mail *</label>
+                      <label className="block text-base font-bold text-gray-900 mb-2">Contact E-mail *</label>
                       <input
                         {...register('team.contactEmail')}
                         type="email"
-                        className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                        className="w-full p-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent font-medium text-gray-900 placeholder-gray-500"
                         placeholder="team@email.com"
                       />
                       {errors.team?.contactEmail && (
@@ -200,7 +200,7 @@ export default function InschrijvenPage() {
 
                     <div>
                       <div className="flex items-center justify-between mb-4">
-                        <label className="block text-sm font-semibold text-gray-800">Teamleden (1-3 extra spelers)</label>
+                        <label className="block text-base font-bold text-gray-900">Teamleden (1-3 extra spelers)</label>
                         {fields.length < 3 && (
                           <button
                             type="button"
@@ -220,7 +220,7 @@ export default function InschrijvenPage() {
                               <input
                                 {...register(`team.members.${index}.name`)}
                                 placeholder="Naam"
-                                className="w-full p-2 border rounded focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                                className="w-full p-2 border-2 border-gray-300 rounded focus:ring-2 focus:ring-green-500 focus:border-transparent font-medium text-gray-900 placeholder-gray-500"
                               />
                             </div>
                             <div className="flex-1">
@@ -228,7 +228,7 @@ export default function InschrijvenPage() {
                                 {...register(`team.members.${index}.email`)}
                                 type="email"
                                 placeholder="E-mail"
-                                className="w-full p-2 border rounded focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                                className="w-full p-2 border-2 border-gray-300 rounded focus:ring-2 focus:ring-green-500 focus:border-transparent font-medium text-gray-900 placeholder-gray-500"
                               />
                             </div>
                             <button
@@ -261,15 +261,15 @@ export default function InschrijvenPage() {
 
               {step === 2 && (
                 <div>
-                  <h2 className="text-xl font-semibold mb-6">Stap 2: Tijdslot Voorkeuren</h2>
-                  <p className="text-gray-700 mb-6">
+                  <h2 className="text-2xl font-bold text-gray-900 mb-6">Stap 2: Tijdslot Voorkeuren</h2>
+                  <p className="text-gray-900 font-medium mb-6">
                     Selecteer maximaal 4 tijdsloten. De volgorde bepaalt je prioriteit (1 = hoogste voorkeur).
                   </p>
 
                   <div className="space-y-4">
                     {[1, 2, 3, 4, 5].map(day => (
                       <div key={day} className="border rounded-lg p-4">
-                        <h3 className="font-semibold text-lg mb-3">
+                        <h3 className="font-bold text-xl text-gray-900 mb-3">
                           {DAYS_OF_WEEK[day as keyof typeof DAYS_OF_WEEK]}
                         </h3>
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -288,14 +288,14 @@ export default function InschrijvenPage() {
                                 key={timeslot.id}
                                 type="button"
                                 onClick={() => handleTimeslotToggle(timeslot.id)}
-                                className={`p-3 rounded-lg border text-left transition-colors ${
+                                className={`p-3 rounded-lg border-2 text-left transition-colors ${
                                   isSelected
-                                    ? 'bg-green-100 border-green-500 text-green-700'
-                                    : 'bg-white border-gray-200 hover:bg-gray-50'
+                                    ? 'bg-green-100 border-green-600'
+                                    : 'bg-white border-gray-300 hover:bg-gray-50 hover:border-gray-400'
                                 }`}
                               >
                                 <div className="flex items-center justify-between">
-                                  <span className="font-medium">{timeSlot.label}</span>
+                                  <span className="font-bold text-gray-900">{timeSlot.label}</span>
                                   {isSelected && (
                                     <span className="bg-green-500 text-white px-2 py-1 rounded text-sm">
                                       #{priority}
@@ -336,18 +336,18 @@ export default function InschrijvenPage() {
 
               {step === 3 && (
                 <div>
-                  <h2 className="text-xl font-semibold mb-6">Stap 3: Bevestiging</h2>
+                  <h2 className="text-2xl font-bold text-gray-900 mb-6">Stap 3: Bevestiging</h2>
                   
                   <div className="space-y-6">
                     <div className="bg-gray-50 p-4 rounded-lg">
-                      <h3 className="font-semibold mb-2">Team Informatie</h3>
+                      <h3 className="font-bold text-lg text-gray-900 mb-2">Team Informatie</h3>
                       <p><strong>Naam:</strong> {watch('team.teamName')}</p>
                       <p><strong>Contact:</strong> {watch('team.contactEmail')}</p>
                       <p><strong>Aantal leden:</strong> {fields.length + 1}</p>
                     </div>
 
                     <div className="bg-gray-50 p-4 rounded-lg">
-                      <h3 className="font-semibold mb-2">Tijdslot Voorkeuren</h3>
+                      <h3 className="font-bold text-lg text-gray-900 mb-2">Tijdslot Voorkeuren</h3>
                       <div className="space-y-2">
                         {preferences
                           .sort((a, b) => a.priority - b.priority)
@@ -366,8 +366,8 @@ export default function InschrijvenPage() {
                     </div>
 
                     <div className="bg-blue-50 p-4 rounded-lg">
-                      <h3 className="font-semibold text-blue-800 mb-2">Belangrijke Informatie</h3>
-                      <ul className="text-blue-700 space-y-1 text-sm">
+                      <h3 className="font-bold text-lg text-blue-900 mb-2">Belangrijke Informatie</h3>
+                      <ul className="text-blue-900 font-medium space-y-1">
                         <li>• De loting vindt plaats na sluiting van de inschrijfperiode</li>
                         <li>• Je ontvangt een bevestigingsmail met je toegewezen tijdslot</li>
                         <li>• Wijzigingen zijn na inschrijving niet meer mogelijk</li>
