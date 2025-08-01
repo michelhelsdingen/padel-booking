@@ -1,0 +1,102 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+model Team {
+  id           String   @id @default(cuid())
+  name         String
+  contactEmail String   @unique
+  memberCount  Int
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  members     TeamMember[]
+  preferences TeamPreference[]
+  assignments Assignment[]
+
+  @@map("teams")
+}
+
+model TeamMember {
+  id     String @id @default(cuid())
+  teamId String
+  name   String
+  email  String
+
+  team Team @relation(fields: [teamId], references: [id], onDelete: Cascade)
+
+  @@map("team_members")
+}
+
+model Timeslot {
+  id        String @id @default(cuid())
+  dayOfWeek Int // 1=Monday, 5=Friday
+  startTime String // "13:30"
+  endTime   String // "15:30"
+  maxTeams  Int    @default(4)
+  isActive  Boolean @default(true)
+
+  preferences TeamPreference[]
+  assignments Assignment[]
+
+  @@unique([dayOfWeek, startTime])
+  @@map("timeslots")
+}
+
+model TeamPreference {
+  id         String @id @default(cuid())
+  teamId     String
+  timeslotId String
+  priority   Int // 1-4, 1 being highest priority
+
+  team     Team     @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  timeslot Timeslot @relation(fields: [timeslotId], references: [id])
+
+  @@unique([teamId, timeslotId])
+  @@unique([teamId, priority])
+  @@map("team_preferences")
+}
+
+model Assignment {
+  id           String   @id @default(cuid())
+  teamId       String
+  timeslotId   String
+  assignedAt   DateTime @default(now())
+  lotteryRound Int?
+
+  team     Team     @relation(fields: [teamId], references: [id])
+  timeslot Timeslot @relation(fields: [timeslotId], references: [id])
+
+  @@unique([teamId, timeslotId])
+  @@map("assignments")
+}
+
+model RegistrationPeriod {
+  id                String   @id @default(cuid())
+  name              String
+  registrationStart DateTime
+  registrationEnd   DateTime
+  lotteryDate       DateTime
+  isActive          Boolean  @default(false)
+  description       String?
+
+  @@map("registration_periods")
+}
+
+model Admin {
+  id       String @id @default(cuid())
+  email    String @unique
+  name     String
+  password String
+  isActive Boolean @default(true)
+
+  @@map("admins")
+}
