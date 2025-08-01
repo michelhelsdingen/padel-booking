@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase'
 import { completeRegistrationSchema } from '@/lib/validations'
+import { sendConfirmationEmail } from '@/lib/email'
 import { z } from 'zod'
 
 export async function POST(request: NextRequest) {
@@ -176,13 +177,34 @@ export async function POST(request: NextRequest) {
       throw preferencesError
     }
 
-    // TODO: Send confirmation email here
-    // await sendConfirmationEmail(team, validatedData)
+    // Get team data with preferences and members for email
+    const { data: teamWithDetails } = await supabaseAdmin
+      .from('teams')
+      .select(`
+        *,
+        members:team_members(*),
+        preferences:team_preferences(
+          *,
+          timeslot:timeslots(*)
+        )
+      `)
+      .eq('id', team.id)
+      .single()
+
+    if (teamWithDetails) {
+      // Send confirmation email
+      try {
+        await sendConfirmationEmail(teamWithDetails)
+      } catch (emailError) {
+        console.error('Failed to send confirmation email:', emailError)
+        // Don't fail the registration if email fails
+      }
+    }
 
     return NextResponse.json({
       success: true,
       teamId: team.id,
-      message: 'Team succesvol ingeschreven'
+      message: 'Team succesvol ingeschreven. Je ontvangt een bevestigingsmail.'
     })
 
   } catch (error) {
