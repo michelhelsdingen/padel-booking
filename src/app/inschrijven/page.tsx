@@ -86,6 +86,7 @@ export default function InschrijvenPage() {
   }
 
   const onSubmit = async (data: FormData) => {
+    console.log('Form submitted with data:', data)
     setIsLoading(true)
     
     const loadingToast = toast.loading('Bezig met inschrijven...')
@@ -488,9 +489,14 @@ export default function InschrijvenPage() {
                     <button
                       type="submit"
                       disabled={isLoading}
+                      onClick={() => {
+                        console.log('Submit button clicked')
+                        console.log('Current form errors:', errors)
+                        console.log('Current form data:', watch())
+                      }}
                       className="bg-green-600 hover:bg-green-700 disabled:bg-gray-400 text-white px-6 py-2 rounded-lg transition-colors"
                     >
-                      {isLoading ? 'Inschrijven...' : 'Inschrijving Bevestigen'}
+                      {isLoading ? 'Bezig met versturen...' : 'Inschrijving Bevestigen'}
                     </button>
                   </div>
                 </div>

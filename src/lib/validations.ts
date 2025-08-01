@@ -17,7 +17,10 @@ export const teamRegistrationSchema = z.object({
     .min(1, 'Voeg minimaal 1 teamlid toe')
     .max(3, 'Maximaal 3 extra teamleden toegestaan')
     .refine((members) => {
-      const emails = members.map(m => m.email.toLowerCase())
+      const emails = members
+        .map(m => m.email)
+        .filter(email => email && email.length > 0)
+        .map(email => email.toLowerCase())
       const uniqueEmails = new Set(emails)
       return emails.length === uniqueEmails.size
     }, {
