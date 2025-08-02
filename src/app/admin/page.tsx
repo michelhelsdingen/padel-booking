@@ -80,6 +80,7 @@ interface LotteryResults {
 import { Play, BarChart3, Users, Calendar, Mail, Settings, RefreshCw, Trash2, UserPlus } from 'lucide-react'
 import { formatTimeslot, DAYS_OF_WEEK } from '@/lib/utils'
 import VisitorStats from '@/components/admin/VisitorStats'
+import PinProtection from '@/components/admin/PinProtection'
 
 interface Team {
   id: string
@@ -514,7 +515,8 @@ export default function AdminPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-100">
+    <PinProtection>
+      <div className="min-h-screen bg-gray-100">
       <div className="bg-white shadow-sm border-b">
         <div className="container mx-auto px-4">
           <div className="flex items-center justify-between py-4">
@@ -1092,6 +1094,7 @@ export default function AdminPage() {
         )}
       </div>
     </div>
+    </PinProtection>
   )
 }
 
