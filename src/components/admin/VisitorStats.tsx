@@ -55,7 +55,7 @@ export default function VisitorStats() {
   if (isLoading) {
     return (
       <div className="bg-white rounded-lg border shadow-sm p-6">
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">Realtime Visitor Stats</h3>
+        <h3 className="text-lg font-semibold text-gray-900 mb-4">Realtime bezoekers overzicht</h3>
         <div className="animate-pulse">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             {[...Array(4)].map((_, i) => (
@@ -70,7 +70,7 @@ export default function VisitorStats() {
   return (
     <div className="bg-white rounded-lg border shadow-sm p-6">
       <div className="flex items-center justify-between mb-4">
-        <h3 className="text-lg font-semibold text-gray-900">Realtime Visitor Stats</h3>
+        <h3 className="text-lg font-semibold text-gray-900">Realtime bezoekers overzicht</h3>
         <div className="flex items-center text-green-600">
           <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse mr-2"></div>
           <span className="text-sm">Live</span>
