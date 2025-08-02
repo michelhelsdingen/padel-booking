@@ -140,7 +140,6 @@ export default function AdminPage() {
   // Modal states
   const [showPeriodModal, setShowPeriodModal] = useState(false)
   const [showTemplateModal, setShowTemplateModal] = useState(false)
-  const [showTimeslotConfigModal, setShowTimeslotConfigModal] = useState(false)
   const [showClearTeamsModal, setShowClearTeamsModal] = useState(false)
   const [isClearing, setIsClearing] = useState(false)
   const [isGeneratingDummy, setIsGeneratingDummy] = useState(false)
@@ -434,30 +433,6 @@ export default function AdminPage() {
     }
   }
 
-  const handleTimeslotConfigSave = async (configData: {
-    maxTeamsPerSlot: number
-    timeSlots: Array<{ startTime: string, endTime: string, enabled: boolean }>
-    activeDays: Record<number, boolean>
-  }) => {
-    try {
-      const response = await fetch('/api/admin/settings/timeslots', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(configData)
-      })
-      
-      if (response.ok) {
-        alert('Tijdslot configuratie succesvol opgeslagen!')
-        setShowTimeslotConfigModal(false)
-        loadTimeslots() // Refresh timeslots
-      } else {
-        const error = await response.json()
-        alert(`Fout: ${error.message}`)
-      }
-    } catch {
-      alert('Er is een fout opgetreden bij het opslaan')
-    }
-  }
 
   const clearAllTeams = async () => {
     setIsClearing(true)
@@ -900,13 +875,34 @@ export default function AdminPage() {
           <div className="bg-white rounded-lg shadow p-6">
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-2xl font-bold text-gray-900">Tijdslot Beheer</h2>
-              <button
-                onClick={loadTimeslots}
-                className="flex items-center space-x-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors"
-              >
-                <RefreshCw className="h-4 w-4" />
-                <span>Ververs</span>
-              </button>
+              <div className="flex items-center space-x-4">
+                <div className="flex items-center space-x-2">
+                  <label className="text-sm font-bold text-gray-900">
+                    Maximum Teams per Tijdslot:
+                  </label>
+                  <input
+                    type="number"
+                    min="1"
+                    max="10"
+                    defaultValue="5"
+                    className="w-16 px-2 py-1 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    onChange={(e) => {
+                      const value = parseInt(e.target.value)
+                      if (value >= 1 && value <= 10) {
+                        // Here you can add logic to save this setting
+                        console.log('Max teams per slot:', value)
+                      }
+                    }}
+                  />
+                </div>
+                <button
+                  onClick={loadTimeslots}
+                  className="flex items-center space-x-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors"
+                >
+                  <RefreshCw className="h-4 w-4" />
+                  <span>Ververs</span>
+                </button>
+              </div>
             </div>
 
             <div className="grid gap-6">
@@ -1001,18 +997,6 @@ export default function AdminPage() {
                 </button>
               </div>
 
-              <div>
-                <h3 className="font-bold text-lg text-gray-900 mb-2">Tijdslot Configuratie</h3>
-                <p className="text-base font-medium text-gray-900 mb-4">
-                  Beheer beschikbare tijdsloten en capaciteit per slot.
-                </p>
-                <button 
-                  onClick={() => setShowTimeslotConfigModal(true)}
-                  className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors"
-                >
-                  Tijdsloten Bewerken
-                </button>
-              </div>
             </div>
           </div>
         )}
@@ -1033,13 +1017,6 @@ export default function AdminPage() {
           />
         )}
 
-        {/* Timeslot Configuration Modal */}
-        {showTimeslotConfigModal && (
-          <TimeslotConfigModal 
-            onClose={() => setShowTimeslotConfigModal(false)}
-            onSave={handleTimeslotConfigSave}
-          />
-        )}
 
         {/* Clear All Teams Confirmation Modal */}
         {showClearTeamsModal && (
@@ -1889,151 +1866,6 @@ LTC de Kei`
               className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
             >
               Alle Templates Opslaan
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
-  )
-}
-
-// Timeslot Configuration Modal Component
-function TimeslotConfigModal({ onClose, onSave }: { 
-  onClose: () => void
-  onSave: (data: {
-    maxTeamsPerSlot: number
-    timeSlots: Array<{ startTime: string, endTime: string, enabled: boolean }>
-    activeDays: Record<number, boolean>
-  }) => void 
-}) {
-  const [config, setConfig] = useState({
-    maxTeamsPerSlot: 5,
-    timeSlots: [
-      { startTime: '13:30', endTime: '14:30', enabled: true },
-      { startTime: '14:30', endTime: '15:30', enabled: true },
-      { startTime: '15:30', endTime: '16:30', enabled: true },
-      { startTime: '16:30', endTime: '17:30', enabled: true },
-      { startTime: '17:30', endTime: '18:30', enabled: true },
-      { startTime: '18:30', endTime: '19:30', enabled: true },
-      { startTime: '19:30', endTime: '20:30', enabled: true },
-      { startTime: '20:30', endTime: '21:30', enabled: true }
-    ],
-    activeDays: {
-      1: true, // Monday
-      2: true, // Tuesday
-      3: true, // Wednesday
-      4: true, // Thursday
-      5: true  // Friday
-    }
-  })
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
-    onSave(config)
-  }
-
-  const toggleTimeSlot = (index: number) => {
-    setConfig(prev => ({
-      ...prev,
-      timeSlots: prev.timeSlots.map((slot, i) => 
-        i === index ? { ...slot, enabled: !slot.enabled } : slot
-      )
-    }))
-  }
-
-  const toggleDay = (day: number) => {
-    setConfig(prev => ({
-      ...prev,
-      activeDays: {
-        ...prev.activeDays,
-        [day]: !prev.activeDays[day as keyof typeof prev.activeDays]
-      }
-    }))
-  }
-
-  return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg p-6 w-full max-w-3xl max-h-[90vh] overflow-y-auto">
-        <div className="flex items-center justify-between mb-6">
-          <h3 className="text-xl font-bold text-gray-900">Tijdslot Configuratie</h3>
-          <button
-            onClick={onClose}
-            className="text-gray-400 hover:text-gray-600"
-          >
-            ✕
-          </button>
-        </div>
-
-        <form onSubmit={handleSubmit} className="space-y-6">
-          <div>
-            <label className="block text-sm font-bold text-gray-900 mb-2">
-              Maximum Teams per Tijdslot
-            </label>
-            <input
-              type="number"
-              min="1"
-              max="10"
-              value={config.maxTeamsPerSlot}
-              onChange={(e) => setConfig({ ...config, maxTeamsPerSlot: parseInt(e.target.value) })}
-              className="w-32 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-          </div>
-
-          <div>
-            <h4 className="font-bold text-lg text-gray-900 mb-3">Actieve Dagen</h4>
-            <div className="grid grid-cols-5 gap-3">
-              {[
-                { day: 1, label: 'Maandag' },
-                { day: 2, label: 'Dinsdag' },
-                { day: 3, label: 'Woensdag' },
-                { day: 4, label: 'Donderdag' },
-                { day: 5, label: 'Vrijdag' }
-              ].map(({ day, label }) => (
-                <label key={day} className="flex items-center space-x-2">
-                  <input
-                    type="checkbox"
-                    checked={config.activeDays[day as keyof typeof config.activeDays]}
-                    onChange={() => toggleDay(day)}
-                    className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                  />
-                  <span className="font-medium text-gray-900">{label}</span>
-                </label>
-              ))}
-            </div>
-          </div>
-
-          <div>
-            <h4 className="font-bold text-lg text-gray-900 mb-3">Beschikbare Tijdsloten</h4>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-              {config.timeSlots.map((slot, index) => (
-                <label key={index} className="flex items-center space-x-2 p-3 border rounded-lg">
-                  <input
-                    type="checkbox"
-                    checked={slot.enabled}
-                    onChange={() => toggleTimeSlot(index)}
-                    className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                  />
-                  <span className="font-medium text-gray-900">
-                    {slot.startTime} - {slot.endTime}
-                  </span>
-                </label>
-              ))}
-            </div>
-          </div>
-
-          <div className="flex space-x-4 pt-4">
-            <button
-              type="button"
-              onClick={onClose}
-              className="flex-1 px-4 py-2 text-gray-700 bg-gray-200 rounded-lg hover:bg-gray-300 transition-colors"
-            >
-              Annuleren
-            </button>
-            <button
-              type="submit"
-              className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-            >
-              Configuratie Opslaan
             </button>
           </div>
         </form>
