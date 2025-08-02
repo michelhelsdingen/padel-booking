@@ -73,15 +73,42 @@ class VisitorTracker {
       .gte('start_time', `${today}T00:00:00Z`)
       .lt('start_time', `${today}T23:59:59Z`)
 
-    // Upsert daily stats
-    await supabaseAdmin
+    // Check if we already have a record for today
+    const { data: existingStats } = await supabaseAdmin
       .from('visitor_stats')
-      .upsert({
-        date: today,
-        unique_visitors: uniqueVisitors || 0,
-        total_visitors: uniqueVisitors || 0, // For now, same as unique
-        updated_at: new Date().toISOString()
-      })
+      .select('*')
+      .eq('date', today)
+      .single()
+
+    if (existingStats) {
+      // Update existing record (keep accumulating total)
+      await supabaseAdmin
+        .from('visitor_stats')
+        .update({
+          unique_visitors: uniqueVisitors || 0,
+          updated_at: new Date().toISOString()
+        })
+        .eq('date', today)
+    } else {
+      // Create new record for today
+      // Get the previous total to continue accumulating
+      const { data: previousStats } = await supabaseAdmin
+        .from('visitor_stats')
+        .select('total_visitors')
+        .order('date', { ascending: false })
+        .limit(1)
+      
+      const previousTotal = previousStats?.[0]?.total_visitors || 0
+      
+      await supabaseAdmin
+        .from('visitor_stats')
+        .insert({
+          date: today,
+          unique_visitors: uniqueVisitors || 0,
+          total_visitors: previousTotal + (uniqueVisitors || 0),
+          updated_at: new Date().toISOString()
+        })
+    }
   }
 
   // Get current stats
@@ -104,12 +131,12 @@ class VisitorTracker {
       .gte('start_time', `${today}T00:00:00Z`)
       .lt('start_time', `${today}T23:59:59Z`)
 
-    // Get total visitors from stats table
-    const { data: totalStats } = await supabaseAdmin
+    // Get total visitors - sum of all unique visitors across all days
+    const { data: allStats } = await supabaseAdmin
       .from('visitor_stats')
-      .select('total_visitors')
-      .order('date', { ascending: false })
-      .limit(1)
+      .select('unique_visitors')
+    
+    const totalVisitors = allStats?.reduce((sum, stat) => sum + (stat.unique_visitors || 0), 0) || 0
 
     // Calculate average session duration
     const avgSessionDuration = activeSessions && activeSessions.length > 0
@@ -128,7 +155,7 @@ class VisitorTracker {
     }
 
     return {
-      totalVisitors: totalStats?.[0]?.total_visitors || 0,
+      totalVisitors: totalVisitors,
       activeVisitors: activeVisitors || 0,
       todayVisitors: todayVisitors || 0,
       avgSessionDuration,
