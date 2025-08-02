@@ -1,111 +1,152 @@
-// Simple in-memory visitor tracking
-interface VisitorSession {
-  id: string
-  page: string
-  startTime: number
-  lastActivity: number
-  userAgent?: string
-}
+import { supabaseAdmin } from './supabase'
 
+// Supabase-based visitor tracking
 class VisitorTracker {
-  private sessions: Map<string, VisitorSession> = new Map()
-  private dailyVisitors: Set<string> = new Set()
-  private totalVisitors = 0
-  private lastResetDate = new Date().toDateString()
-
   // Generate a simple session ID
   private generateSessionId(): string {
     return Math.random().toString(36).substring(2) + Date.now().toString(36)
   }
 
   // Clean up old sessions (older than 30 minutes)
-  private cleanupOldSessions() {
-    const thirtyMinutesAgo = Date.now() - (30 * 60 * 1000)
-    for (const [sessionId, session] of this.sessions) {
-      if (session.lastActivity < thirtyMinutesAgo) {
-        this.sessions.delete(sessionId)
-      }
-    }
-  }
-
-  // Reset daily counter if it's a new day
-  private checkDailyReset() {
-    const today = new Date().toDateString()
-    if (this.lastResetDate !== today) {
-      this.dailyVisitors.clear()
-      this.lastResetDate = today
-    }
+  private async cleanupOldSessions() {
+    const thirtyMinutesAgo = new Date(Date.now() - (30 * 60 * 1000)).toISOString()
+    
+    await supabaseAdmin
+      .from('visitor_sessions')
+      .delete()
+      .lt('last_activity', thirtyMinutesAgo)
   }
 
   // Track a page visit
-  trackVisit(page: string, userAgent?: string): string {
-    this.cleanupOldSessions()
-    this.checkDailyReset()
+  async trackVisit(page: string, userAgent?: string): Promise<string> {
+    await this.cleanupOldSessions()
 
     const sessionId = this.generateSessionId()
-    const now = Date.now()
+    const now = new Date().toISOString()
 
     // Create new session
-    this.sessions.set(sessionId, {
-      id: sessionId,
-      page,
-      startTime: now,
-      lastActivity: now,
-      userAgent
-    })
+    const { error } = await supabaseAdmin
+      .from('visitor_sessions')
+      .insert({
+        session_id: sessionId,
+        page,
+        start_time: now,
+        last_activity: now,
+        user_agent: userAgent
+      })
 
-    // Add to daily visitors
-    this.dailyVisitors.add(sessionId)
-    this.totalVisitors++
+    if (error) {
+      console.error('Error creating visitor session:', error)
+      return sessionId // Return sessionId even if DB fails
+    }
+
+    // Update daily stats
+    await this.updateDailyStats()
 
     return sessionId
   }
 
   // Update session activity
-  updateActivity(sessionId: string, newPage?: string) {
-    const session = this.sessions.get(sessionId)
-    if (session) {
-      session.lastActivity = Date.now()
-      if (newPage) {
-        session.page = newPage
-      }
+  async updateActivity(sessionId: string, newPage?: string) {
+    const updates: { last_activity: string; page?: string } = {
+      last_activity: new Date().toISOString()
     }
+    
+    if (newPage) {
+      updates.page = newPage
+    }
+
+    await supabaseAdmin
+      .from('visitor_sessions')
+      .update(updates)
+      .eq('session_id', sessionId)
+  }
+
+  // Update daily visitor stats
+  private async updateDailyStats() {
+    const today = new Date().toISOString().split('T')[0]
+    
+    // Get today's unique visitors
+    const { count: uniqueVisitors } = await supabaseAdmin
+      .from('visitor_sessions')
+      .select('*', { count: 'exact', head: true })
+      .gte('start_time', `${today}T00:00:00Z`)
+      .lt('start_time', `${today}T23:59:59Z`)
+
+    // Upsert daily stats
+    await supabaseAdmin
+      .from('visitor_stats')
+      .upsert({
+        date: today,
+        unique_visitors: uniqueVisitors || 0,
+        total_visitors: uniqueVisitors || 0, // For now, same as unique
+        updated_at: new Date().toISOString()
+      })
   }
 
   // Get current stats
-  getStats() {
-    this.cleanupOldSessions()
-    this.checkDailyReset()
+  async getStats() {
+    await this.cleanupOldSessions()
 
-    const activeVisitors = this.sessions.size
-    const todayVisitors = this.dailyVisitors.size
-    
+    const now = new Date()
+    const today = now.toISOString().split('T')[0]
+
+    // Get active sessions
+    const { data: activeSessions, count: activeVisitors } = await supabaseAdmin
+      .from('visitor_sessions')
+      .select('*', { count: 'exact' })
+      .gte('last_activity', new Date(Date.now() - (30 * 60 * 1000)).toISOString())
+
+    // Get today's visitors
+    const { count: todayVisitors } = await supabaseAdmin
+      .from('visitor_sessions')
+      .select('*', { count: 'exact', head: true })
+      .gte('start_time', `${today}T00:00:00Z`)
+      .lt('start_time', `${today}T23:59:59Z`)
+
+    // Get total visitors from stats table
+    const { data: totalStats } = await supabaseAdmin
+      .from('visitor_stats')
+      .select('total_visitors')
+      .order('date', { ascending: false })
+      .limit(1)
+
     // Calculate average session duration
-    const activeSessions = Array.from(this.sessions.values())
-    const avgSessionDuration = activeSessions.length > 0 
-      ? Math.round(activeSessions.reduce((acc, session) => 
-          acc + (session.lastActivity - session.startTime), 0) / activeSessions.length / 1000)
+    const avgSessionDuration = activeSessions && activeSessions.length > 0
+      ? Math.round(activeSessions.reduce((acc, session) => {
+          const duration = new Date(session.last_activity).getTime() - new Date(session.start_time).getTime()
+          return acc + duration
+        }, 0) / activeSessions.length / 1000)
       : 0
 
     // Get page breakdown
     const pageBreakdown: Record<string, number> = {}
-    activeSessions.forEach(session => {
-      pageBreakdown[session.page] = (pageBreakdown[session.page] || 0) + 1
-    })
+    if (activeSessions) {
+      activeSessions.forEach(session => {
+        pageBreakdown[session.page] = (pageBreakdown[session.page] || 0) + 1
+      })
+    }
 
     return {
-      totalVisitors: this.totalVisitors,
-      activeVisitors,
-      todayVisitors,
+      totalVisitors: totalStats?.[0]?.total_visitors || 0,
+      activeVisitors: activeVisitors || 0,
+      todayVisitors: todayVisitors || 0,
       avgSessionDuration,
       pageBreakdown
     }
   }
 
   // Get active sessions by page
-  getActiveSessionsByPage(page: string) {
-    this.cleanupOldSessions()
-    return Array.from(this.sessions.values()).filter(session => session.page === page).length
+  async getActiveSessionsByPage(page: string): Promise<number> {
+    await this.cleanupOldSessions()
+    
+    const { count } = await supabaseAdmin
+      .from('visitor_sessions')
+      .select('*', { count: 'exact', head: true })
+      .eq('page', page)
+      .gte('last_activity', new Date(Date.now() - (30 * 60 * 1000)).toISOString())
+
+    return count || 0
   }
 }
 

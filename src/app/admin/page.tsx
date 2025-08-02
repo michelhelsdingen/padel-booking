@@ -162,11 +162,14 @@ export default function AdminPage() {
   const [isSendingEmails, setIsSendingEmails] = useState(false)
   const [hasExistingLottery, setHasExistingLottery] = useState(false)
   const [showLotteryWarningModal, setShowLotteryWarningModal] = useState(false)
+  const [maxTeams, setMaxTeams] = useState(5)
+  const [isSavingMaxTeams, setIsSavingMaxTeams] = useState(false)
 
   useEffect(() => {
     loadTeams()
     loadLotteryStats()
     loadTimeslots()
+    loadMaxTeams()
     loadLotteryResults()
   }, [])
 
@@ -323,6 +326,45 @@ export default function AdminPage() {
       }
     } catch (error) {
       console.error('Error loading timeslots:', error)
+    }
+  }
+
+  const loadMaxTeams = async () => {
+    try {
+      const response = await fetch('/api/admin/settings/max-teams')
+      if (response.ok) {
+        const data = await response.json()
+        setMaxTeams(data.maxTeams)
+      }
+    } catch (error) {
+      console.error('Error loading max teams setting:', error)
+    }
+  }
+
+  const saveMaxTeams = async (value: number) => {
+    if (value < 1 || value > 10) return
+    
+    setIsSavingMaxTeams(true)
+    try {
+      const response = await fetch('/api/admin/settings/max-teams', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ maxTeams: value })
+      })
+      
+      if (response.ok) {
+        setMaxTeams(value)
+        setShowSuccessModal({
+          show: true,
+          title: 'Instelling Opgeslagen',
+          message: `Maximum teams per tijdslot ingesteld op ${value}`,
+          type: 'success'
+        })
+      }
+    } catch (error) {
+      console.error('Error saving max teams setting:', error)
+    } finally {
+      setIsSavingMaxTeams(false)
     }
   }
 
@@ -884,16 +926,19 @@ export default function AdminPage() {
                     type="number"
                     min="1"
                     max="10"
-                    defaultValue="5"
-                    className="w-16 px-2 py-1 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    value={maxTeams}
+                    disabled={isSavingMaxTeams}
+                    className="w-16 px-2 py-1 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100"
                     onChange={(e) => {
                       const value = parseInt(e.target.value)
                       if (value >= 1 && value <= 10) {
-                        // Here you can add logic to save this setting
-                        console.log('Max teams per slot:', value)
+                        saveMaxTeams(value)
                       }
                     }}
                   />
+                  {isSavingMaxTeams && (
+                    <span className="text-sm text-gray-500">Opslaan...</span>
+                  )}
                 </div>
                 <button
                   onClick={loadTimeslots}

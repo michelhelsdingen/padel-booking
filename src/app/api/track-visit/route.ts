@@ -9,11 +9,11 @@ export async function POST(request: NextRequest) {
 
     if (sessionId) {
       // Update existing session
-      visitorTracker.updateActivity(sessionId, page)
+      await visitorTracker.updateActivity(sessionId, page)
       return NextResponse.json({ sessionId })
     } else {
       // Create new session
-      const newSessionId = visitorTracker.trackVisit(page, userAgent)
+      const newSessionId = await visitorTracker.trackVisit(page, userAgent)
       return NextResponse.json({ sessionId: newSessionId })
     }
   } catch (error) {

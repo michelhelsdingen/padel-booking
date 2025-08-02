@@ -3,11 +3,11 @@ import { visitorTracker } from '@/lib/visitor-tracker'
 
 export async function GET() {
   try {
-    const stats = visitorTracker.getStats()
+    const stats = await visitorTracker.getStats()
     
     // Get page-specific breakdowns
-    const homeVisitors = visitorTracker.getActiveSessionsByPage('home')
-    const signupVisitors = visitorTracker.getActiveSessionsByPage('signup')
+    const homeVisitors = await visitorTracker.getActiveSessionsByPage('home')
+    const signupVisitors = await visitorTracker.getActiveSessionsByPage('signup')
     
     const responseData = {
       totalVisitors: stats.totalVisitors,
