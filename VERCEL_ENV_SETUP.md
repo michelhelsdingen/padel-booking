@@ -8,24 +8,21 @@ Go to your Vercel project → Settings → Environment Variables and add:
 
 ### Database (Supabase)
 ```
-DATABASE_URL = postgresql://postgres.nrlxlcluutploehbbzkq:!!IQLn1kpg!!@aws-0-eu-central-1.pooler.supabase.com:6543/postgres?pgbouncer=true&connection_limit=1
-
-NEXT_PUBLIC_SUPABASE_URL = https://nrlxlcluutploehbbzkq.supabase.co
-
-NEXT_PUBLIC_SUPABASE_ANON_KEY = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5ybHhsY2x1dXRwbG9laGJiemtxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTQwNTkwMjQsImV4cCI6MjA2OTYzNTAyNH0.2-lCT5fq3QgXxgcJFoCRi65ZvmUY5q6PZqYZdCDpN2M
-
-SUPABASE_SERVICE_ROLE_KEY = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5ybHhsY2x1dXRwbG9laGJiemtxIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc1NDA1OTAyNCwiZXhwIjoyMDY5NjM1MDI0fQ.xdyh_4DnbXfGvkr6mGqpbpAdGOTkyrCeamJnPdsmNkk
+DATABASE_URL = [Get from Supabase Dashboard → Settings → Database]
+NEXT_PUBLIC_SUPABASE_URL = [Get from Supabase Dashboard → Settings → API]
+NEXT_PUBLIC_SUPABASE_ANON_KEY = [Get from Supabase Dashboard → Settings → API]
+SUPABASE_SERVICE_ROLE_KEY = [Get from Supabase Dashboard → Settings → API - KEEP SECRET!]
 ```
 
 ### Email (Resend)
 ```
-RESEND_API_KEY = re_hJzoWNMT_9iFYiaShyGEYprDVHoizSGLw
+RESEND_API_KEY = [Get from Resend Dashboard]
 ```
 
 ### Vercel Analytics
 ```
-VERCEL_API_TOKEN = ZTtxR622Q1M55o0v2BsktlO1
-VERCEL_PROJECT_ID = prj_iTjcC9grHCLkPSQ897vuJ7n717C2
+VERCEL_API_TOKEN = [Get from Vercel Account Settings]
+VERCEL_PROJECT_ID = [Get from Vercel Project Settings]
 ```
 
 ## Steps to Add:
@@ -33,9 +30,15 @@ VERCEL_PROJECT_ID = prj_iTjcC9grHCLkPSQ897vuJ7n717C2
 1. Go to https://vercel.com/dashboard
 2. Find your padel-booking project
 3. Go to Settings → Environment Variables
-4. Add each variable above
+4. Get the actual values from respective dashboards (DO NOT commit secrets to git)
 5. Set Environment: Production, Preview, Development (or just Production)
 6. Save and redeploy
+
+## Security Note:
+⚠️ **NEVER commit actual API keys or secrets to git repositories!**
+- Use environment variables in production
+- Use .env.local for development (add to .gitignore)
+- Rotate keys immediately if accidentally exposed
 
 ## Common Issues:
 
