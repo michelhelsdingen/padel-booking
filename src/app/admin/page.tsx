@@ -166,11 +166,14 @@ export default function AdminPage() {
   const [isSavingMaxTeams, setIsSavingMaxTeams] = useState(false)
 
   useEffect(() => {
-    loadTeams()
-    loadLotteryStats()
-    loadTimeslots()
-    loadMaxTeams()
-    loadLotteryResults()
+    const loadData = async () => {
+      await loadTeams()
+      await loadLotteryStats()
+      await loadTimeslots()
+      await loadMaxTeams()
+      await loadLotteryResults()
+    }
+    loadData()
   }, [])
 
   const loadTeams = async () => {
@@ -179,6 +182,9 @@ export default function AdminPage() {
       if (response.ok) {
         const data = await response.json()
         setTeams(data)
+        console.log('Teams loaded:', data.length, 'teams')
+      } else {
+        console.error('Failed to load teams:', response.status, response.statusText)
       }
     } catch (err) {
       console.error('Error loading teams:', err)
@@ -194,22 +200,34 @@ export default function AdminPage() {
         console.log('Lottery stats loaded:', data)
       } else {
         console.error('Failed to load lottery stats:', response.status, response.statusText)
-        // Set fallback stats to show something
+        
+        // Try to get error response for debugging
+        try {
+          const errorData = await response.text()
+          console.error('API Error response:', errorData)
+        } catch (e) {
+          console.error('Could not parse error response')
+        }
+        
+        // Set fallback stats - use current teams length or 0 if teams not loaded yet
+        const currentTeamCount = teams.length || 0
         setLotteryStats({
-          totalTeams: teams.length,
+          totalTeams: currentTeamCount,
           assignedTeams: 0,
-          unassignedTeams: teams.length,
+          unassignedTeams: currentTeamCount,
           assignmentsByRound: {},
           assignmentsByDay: {}
         })
       }
     } catch (err) {
       console.error('Error loading lottery stats:', err)
-      // Set fallback stats
+      
+      // Set fallback stats - use current teams length or 0 if teams not loaded yet
+      const currentTeamCount = teams.length || 0
       setLotteryStats({
-        totalTeams: teams.length,
+        totalTeams: currentTeamCount,
         assignedTeams: 0,
-        unassignedTeams: teams.length,
+        unassignedTeams: currentTeamCount,
         assignmentsByRound: {},
         assignmentsByDay: {}
       })
