@@ -1,0 +1,42 @@
+name: Deployment Notifications
+
+on:
+  deployment_status:
+
+jobs:
+  notify:
+    if: github.event.deployment_status.state == 'success'
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Send Success Notification
+        uses: 8398a7/action-slack@v3
+        with:
+          status: success
+          text: |
+            ✅ Padel Booking deployment successful!
+            🌐 URL: ${{ github.event.deployment_status.target_url }}
+            🔗 Branch: ${{ github.ref_name }}
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+        if: always()
+
+      # Alternative: Email notification
+      - name: Send Email Notification
+        uses: dawidd6/action-send-mail@v3
+        with:
+          server_address: smtp.gmail.com
+          server_port: 587
+          username: ${{ secrets.EMAIL_USERNAME }}
+          password: ${{ secrets.EMAIL_PASSWORD }}
+          subject: "✅ Padel Booking Deployment Successful"
+          body: |
+            Your Padel Booking app has been successfully deployed!
+            
+            🌐 Live URL: ${{ github.event.deployment_status.target_url }}
+            🔗 Branch: ${{ github.ref_name }}
+            📝 Commit: ${{ github.sha }}
+            
+            Time: ${{ github.event.deployment_status.created_at }}
+          to: your-email@example.com
+          from: noreply@your-domain.com

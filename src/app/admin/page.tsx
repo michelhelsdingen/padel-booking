@@ -191,9 +191,28 @@ export default function AdminPage() {
       if (response.ok) {
         const data = await response.json()
         setLotteryStats(data)
+        console.log('Lottery stats loaded:', data)
+      } else {
+        console.error('Failed to load lottery stats:', response.status, response.statusText)
+        // Set fallback stats to show something
+        setLotteryStats({
+          totalTeams: teams.length,
+          assignedTeams: 0,
+          unassignedTeams: teams.length,
+          assignmentsByRound: {},
+          assignmentsByDay: {}
+        })
       }
     } catch (err) {
       console.error('Error loading lottery stats:', err)
+      // Set fallback stats
+      setLotteryStats({
+        totalTeams: teams.length,
+        assignedTeams: 0,
+        unassignedTeams: teams.length,
+        assignmentsByRound: {},
+        assignmentsByDay: {}
+      })
     }
   }
 

@@ -3,8 +3,12 @@ import { prisma } from '@/lib/prisma'
 
 export async function GET() {
   try {
+    console.log('Lottery stats API called')
+    console.log('Database URL configured:', !!process.env.DATABASE_URL)
+    
     // Get total teams
     const totalTeams = await prisma.team.count()
+    console.log('Total teams found:', totalTeams)
     
     // Get assignments with team and timeslot details
     const assignments = await prisma.assignment.findMany({
