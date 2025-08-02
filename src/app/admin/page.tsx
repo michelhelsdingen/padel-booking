@@ -126,6 +126,7 @@ export default function AdminPage() {
   const [teams, setTeams] = useState<Team[]>([])
   const [lotteryStats, setLotteryStats] = useState<LotteryStats | null>(null)
   const [isLoading, setIsLoading] = useState(false)
+  const [isRefreshing, setIsRefreshing] = useState(false)
   const [isRunningLottery, setIsRunningLottery] = useState(false)
   const [timeslots, setTimeslots] = useState<Array<{
     id: string
@@ -564,9 +565,19 @@ export default function AdminPage() {
             <h1 className="text-3xl font-bold text-gray-900">Admin Dashboard</h1>
             <div className="flex items-center space-x-4">
               <button
-                onClick={loadTeams}
-                className="p-2 text-gray-600 hover:text-gray-900 transition-colors"
-                title="Ververs data"
+                onClick={async () => {
+                  setIsRefreshing(true)
+                  try {
+                    await loadTeams()
+                    await loadLotteryStats()
+                    await loadTimeslots()
+                  } finally {
+                    setIsRefreshing(false)
+                  }
+                }}
+                disabled={isRefreshing}
+                className={`p-2 text-gray-600 hover:text-gray-900 transition-colors ${isRefreshing ? 'animate-spin' : ''}`}
+                title="Ververs alle data"
               >
                 <RefreshCw className="h-5 w-5" />
               </button>
@@ -621,7 +632,12 @@ export default function AdminPage() {
                   <Calendar className="h-8 w-8 text-green-600" />
                   <div className="ml-4">
                     <p className="text-base font-bold text-gray-900">Toegewezen</p>
-                    <p className="text-2xl font-bold text-gray-900">{lotteryStats?.assignedTeams || 0}</p>
+                    <p className="text-2xl font-bold text-gray-900">
+                      {lotteryStats?.assignedTeams || 0}
+                      {lotteryStats?.assignedTeams === 0 && lotteryStats?.totalTeams > 0 && (
+                        <span className="text-sm text-red-600 ml-2">(!)</span>
+                      )}
+                    </p>
                   </div>
                 </div>
               </div>
