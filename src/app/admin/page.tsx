@@ -303,19 +303,6 @@ export default function AdminPage() {
     }
   }
 
-  const showLotteryResults = async () => {
-    const results = await loadLotteryResults()
-    if (results && results.hasResults) {
-      setShowResultsModal(true)
-    } else {
-      setShowSuccessModal({
-        show: true,
-        title: 'Geen Resultaten',
-        message: 'Er zijn nog geen loting resultaten beschikbaar. Voer eerst een loting uit.',
-        type: 'info'
-      })
-    }
-  }
 
   const loadTimeslots = async () => {
     try {
@@ -792,125 +779,20 @@ export default function AdminPage() {
         )}
 
         {activeTab === 'lottery' && (
-          <div className="space-y-6">
-            <div className="bg-white rounded-lg shadow p-6">
-              <div className="flex items-center justify-between mb-6">
-                <h2 className="text-2xl font-bold text-gray-900">Loting Beheer</h2>
-                <div className="flex space-x-4">
-                  <button
-                    onClick={handleLotteryClick}
-                    disabled={isRunningLottery || teams.length === 0}
-                    className={`flex items-center space-x-2 ${
-                      hasExistingLottery 
-                        ? 'bg-orange-600 hover:bg-orange-700' 
-                        : 'bg-green-600 hover:bg-green-700'
-                    } disabled:bg-gray-400 text-white px-4 py-2 rounded-lg transition-colors`}
-                  >
-                    <Play className="h-4 w-4" />
-                    <span>
-                      {isRunningLottery 
-                        ? 'Bezig...' 
-                        : hasExistingLottery 
-                          ? 'Nieuwe Loting Uitvoeren' 
-                          : 'Loting Uitvoeren'
-                      }
-                    </span>
-                  </button>
-                  <button
-                    onClick={showLotteryResults}
-                    className="flex items-center space-x-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors"
-                  >
-                    <BarChart3 className="h-4 w-4" />
-                    <span>Resultaten Bekijken</span>
-                  </button>
-                  <button
-                    onClick={sendNotifications}
-                    disabled={isLoading || !lotteryStats?.assignedTeams}
-                    className="flex items-center space-x-2 bg-purple-600 hover:bg-purple-700 disabled:bg-gray-400 text-white px-4 py-2 rounded-lg transition-colors"
-                  >
-                    <Mail className="h-4 w-4" />
-                    <span>{isLoading ? 'Versturen...' : 'Alle E-mails'}</span>
-                  </button>
-                </div>
-              </div>
-
-              {/* Existing Lottery Status */}
-              {hasExistingLottery && lotteryResults && (
-                <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-                  <div className="flex items-center justify-between mb-3">
-                    <h3 className="font-bold text-lg text-blue-900">Huidige Loting Status</h3>
-                    <span className="bg-blue-100 text-blue-800 text-sm px-3 py-1 rounded-full font-medium">
-                      Uitgevoerd op {lotteryResults.assignments?.[0]?.assignedAt ? 
-                        new Date(lotteryResults.assignments[0].assignedAt).toLocaleDateString('nl-NL', {
-                          day: 'numeric',
-                          month: 'long',
-                          year: 'numeric',
-                          hour: '2-digit',
-                          minute: '2-digit'
-                        }) : 'Onbekend'
-                      }
-                    </span>
-                  </div>
-                  <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                    <div className="text-center">
-                      <div className="text-2xl font-bold text-blue-900">{lotteryResults.statistics?.totalTeams || 0}</div>
-                      <div className="text-sm text-blue-700">Totaal Teams</div>
-                    </div>
-                    <div className="text-center">
-                      <div className="text-2xl font-bold text-green-600">{lotteryResults.statistics?.assignedTeams || 0}</div>
-                      <div className="text-sm text-green-700">Toegewezen</div>
-                    </div>
-                    <div className="text-center">
-                      <div className="text-2xl font-bold text-orange-600">{lotteryResults.statistics?.unassignedTeams || 0}</div>
-                      <div className="text-sm text-orange-700">Wachtlijst</div>
-                    </div>
-                    <div className="text-center">
-                      <div className="text-2xl font-bold text-purple-600">
-                        {lotteryResults.statistics?.totalTeams ? 
-                          Math.round((lotteryResults.statistics.assignedTeams / lotteryResults.statistics.totalTeams) * 100) : 0
-                        }%
-                      </div>
-                      <div className="text-sm text-purple-700">Succes Ratio</div>
-                    </div>
-                  </div>
-                  <div className="mt-3 text-sm text-blue-800">
-                    <strong>Methoden:</strong> {Object.entries(lotteryResults.statistics?.assignmentsByMethod || {})
-                      .map(([method, count]) => `${count} via ${method === 'preference' ? 'voorkeur' : method}`)
-                      .join(', ')
-                    }
-                  </div>
-                </div>
-              )}
-
-              {lotteryStats && (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div>
-                    <h3 className="font-bold text-lg text-gray-900 mb-3">Toewijzingen per Ronde</h3>
-                    <div className="space-y-2">
-                      {Object.entries(lotteryStats.assignmentsByRound).map(([round, count]) => (
-                        <div key={round} className="flex justify-between items-center p-2 bg-gray-50 rounded">
-                          <span>Ronde {round === '5' ? 'Extra' : round}</span>
-                          <span className="font-medium">{count} teams</span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-
-                  <div>
-                    <h3 className="font-bold text-lg text-gray-900 mb-3">Toewijzingen per Dag</h3>
-                    <div className="space-y-2">
-                      {Object.entries(lotteryStats.assignmentsByDay).map(([day, count]) => (
-                        <div key={day} className="flex justify-between items-center p-2 bg-gray-50 rounded">
-                          <span>{DAYS_OF_WEEK[parseInt(day) as keyof typeof DAYS_OF_WEEK]}</span>
-                          <span className="font-medium">{count} teams</span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
+          <LotteryPageContent 
+            teams={teams}
+            lotteryStats={lotteryStats}
+            lotteryResults={lotteryResults}
+            hasExistingLottery={hasExistingLottery}
+            isRunningLottery={isRunningLottery}
+            isLoading={isLoading}
+            selectedTeamsForEmail={selectedTeamsForEmail}
+            isSendingEmails={isSendingEmails}
+            onHandleLotteryClick={handleLotteryClick}
+            onSendNotifications={sendNotifications}
+            onSendEmailsToTeams={sendEmailsToTeams}
+            onTeamSelectionChange={setSelectedTeamsForEmail}
+          />
         )}
 
         {activeTab === 'timeslots' && (
@@ -1117,6 +999,430 @@ export default function AdminPage() {
       </div>
     </div>
     </PinProtection>
+  )
+}
+
+// Lottery Page Content Component
+function LotteryPageContent({ 
+  teams, 
+  lotteryStats, 
+  lotteryResults, 
+  hasExistingLottery, 
+  isRunningLottery, 
+  isLoading,
+  selectedTeamsForEmail,
+  isSendingEmails,
+  onHandleLotteryClick,
+  onSendNotifications,
+  onSendEmailsToTeams,
+  onTeamSelectionChange
+}: {
+  teams: Team[]
+  lotteryStats: LotteryStats | null
+  lotteryResults: LotteryResults | null
+  hasExistingLottery: boolean
+  isRunningLottery: boolean
+  isLoading: boolean
+  selectedTeamsForEmail: string[]
+  isSendingEmails: boolean
+  onHandleLotteryClick: () => void
+  onSendNotifications: () => void
+  onSendEmailsToTeams: (teamIds: string[], emailType: string) => void
+  onTeamSelectionChange: (teams: string[]) => void
+}) {
+  const [activeSubTab, setActiveSubTab] = useState<'overview' | 'results' | 'emails'>('overview')
+
+  const toggleTeamSelection = (teamId: string) => {
+    if (selectedTeamsForEmail.includes(teamId)) {
+      onTeamSelectionChange(selectedTeamsForEmail.filter(id => id !== teamId))
+    } else {
+      onTeamSelectionChange([...selectedTeamsForEmail, teamId])
+    }
+  }
+
+  const selectAllAssigned = () => {
+    if (!lotteryResults) return
+    const assignedTeamIds = lotteryResults.timeslotDetails
+      .flatMap((slot: TimeslotDetail) => slot.assignedTeams)
+      .map((team) => team.id)
+    onTeamSelectionChange(assignedTeamIds)
+  }
+
+  const selectAllUnassigned = () => {
+    if (!lotteryResults) return
+    const unassignedTeamIds = lotteryResults.unassignedTeams.map((team) => team.id)
+    onTeamSelectionChange(unassignedTeamIds)
+  }
+
+  const clearSelection = () => {
+    onTeamSelectionChange([])
+  }
+
+  const getDayName = (dayOfWeek: number): string => {
+    const days = ['', 'Maandag', 'Dinsdag', 'Woensdag', 'Donderdag', 'Vrijdag']
+    return days[dayOfWeek] || ''
+  }
+
+  const getMethodBadge = (method: string) => {
+    const styles = {
+      'preference': 'bg-green-100 text-green-800',
+      'optimization': 'bg-blue-100 text-blue-800',
+      'random': 'bg-yellow-100 text-yellow-800'
+    }
+    const labels = {
+      'preference': 'Voorkeur',
+      'optimization': 'Optimaal',
+      'random': 'Willekeurig'
+    }
+    return (
+      <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${styles[method as keyof typeof styles] || 'bg-gray-100 text-gray-800'}`}>
+        {labels[method as keyof typeof labels] || method}
+      </span>
+    )
+  }
+
+  return (
+    <div className="space-y-6">
+      <div className="bg-white rounded-lg shadow">
+        <div className="p-6 border-b">
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-2xl font-bold text-gray-900">Loting Beheer</h2>
+            <div className="flex space-x-4">
+              <button
+                onClick={onHandleLotteryClick}
+                disabled={isRunningLottery || teams.length === 0}
+                className={`flex items-center space-x-2 ${
+                  hasExistingLottery 
+                    ? 'bg-orange-600 hover:bg-orange-700' 
+                    : 'bg-green-600 hover:bg-green-700'
+                } disabled:bg-gray-400 text-white px-4 py-2 rounded-lg transition-colors`}
+              >
+                <Play className="h-4 w-4" />
+                <span>
+                  {isRunningLottery 
+                    ? 'Bezig...' 
+                    : hasExistingLottery 
+                      ? 'Nieuwe Loting Uitvoeren' 
+                      : 'Loting Uitvoeren'
+                  }
+                </span>
+              </button>
+              <button
+                onClick={onSendNotifications}
+                disabled={isLoading || !lotteryStats?.assignedTeams}
+                className="flex items-center space-x-2 bg-purple-600 hover:bg-purple-700 disabled:bg-gray-400 text-white px-4 py-2 rounded-lg transition-colors"
+              >
+                <Mail className="h-4 w-4" />
+                <span>{isLoading ? 'Versturen...' : 'Alle E-mails'}</span>
+              </button>
+            </div>
+          </div>
+
+          {/* Sub-tab Navigation */}
+          <div className="flex border-b">
+            {[
+              { id: 'overview', label: 'Overzicht', icon: '📊' },
+              { id: 'results', label: 'Resultaten', icon: '🎯' },
+              { id: 'emails', label: 'E-mail Beheer', icon: '📧' }
+            ].map(tab => (
+              <button
+                key={tab.id}
+                onClick={() => setActiveSubTab(tab.id as 'overview' | 'results' | 'emails')}
+                className={`flex items-center space-x-2 px-6 py-3 text-sm font-medium border-b-2 transition-colors ${
+                  activeSubTab === tab.id
+                    ? 'border-blue-500 text-blue-600'
+                    : 'border-transparent text-gray-500 hover:text-gray-700'
+                }`}
+              >
+                <span>{tab.icon}</span>
+                <span>{tab.label}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div className="p-6">
+          {/* Overview Tab */}
+          {activeSubTab === 'overview' && (
+            <div className="space-y-6">
+              {/* Existing Lottery Status */}
+              {hasExistingLottery && lotteryResults && (
+                <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                  <div className="flex items-center justify-between mb-3">
+                    <h3 className="font-bold text-lg text-blue-900">Huidige Loting Status</h3>
+                    <span className="bg-blue-100 text-blue-800 text-sm px-3 py-1 rounded-full font-medium">
+                      Uitgevoerd op {lotteryResults.assignments?.[0]?.assignedAt ? 
+                        new Date(lotteryResults.assignments[0].assignedAt).toLocaleDateString('nl-NL', {
+                          day: 'numeric',
+                          month: 'long',
+                          year: 'numeric',
+                          hour: '2-digit',
+                          minute: '2-digit'
+                        }) : 'Onbekend'
+                      }
+                    </span>
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                    <div className="text-center">
+                      <div className="text-2xl font-bold text-blue-900">{lotteryResults.statistics?.totalTeams || 0}</div>
+                      <div className="text-sm text-blue-700">Totaal Teams</div>
+                    </div>
+                    <div className="text-center">
+                      <div className="text-2xl font-bold text-green-600">{lotteryResults.statistics?.assignedTeams || 0}</div>
+                      <div className="text-sm text-green-700">Toegewezen</div>
+                    </div>
+                    <div className="text-center">
+                      <div className="text-2xl font-bold text-orange-600">{lotteryResults.statistics?.unassignedTeams || 0}</div>
+                      <div className="text-sm text-orange-700">Wachtlijst</div>
+                    </div>
+                    <div className="text-center">
+                      <div className="text-2xl font-bold text-purple-600">
+                        {lotteryResults.statistics?.totalTeams ? 
+                          Math.round((lotteryResults.statistics.assignedTeams / lotteryResults.statistics.totalTeams) * 100) : 0
+                        }%
+                      </div>
+                      <div className="text-sm text-purple-700">Succes Ratio</div>
+                    </div>
+                  </div>
+                  <div className="mt-3 text-sm text-blue-800">
+                    <strong>Methoden:</strong> {Object.entries(lotteryResults.statistics?.assignmentsByMethod || {})
+                      .map(([method, count]) => `${count} via ${method === 'preference' ? 'voorkeur' : method}`)
+                      .join(', ')
+                    }
+                  </div>
+                </div>
+              )}
+
+              {lotteryStats && (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
+                    <h3 className="font-bold text-lg text-gray-900 mb-3">Toewijzingen per Ronde</h3>
+                    <div className="space-y-2">
+                      {Object.entries(lotteryStats.assignmentsByRound).map(([round, count]) => (
+                        <div key={round} className="flex justify-between items-center p-2 bg-gray-50 rounded">
+                          <span>Ronde {round === '5' ? 'Extra' : round}</span>
+                          <span className="font-medium">{count} teams</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div>
+                    <h3 className="font-bold text-lg text-gray-900 mb-3">Toewijzingen per Dag</h3>
+                    <div className="space-y-2">
+                      {Object.entries(lotteryStats.assignmentsByDay).map(([day, count]) => (
+                        <div key={day} className="flex justify-between items-center p-2 bg-gray-50 rounded">
+                          <span>{DAYS_OF_WEEK[parseInt(day) as keyof typeof DAYS_OF_WEEK]}</span>
+                          <span className="font-medium">{count} teams</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Results Tab */}
+          {activeSubTab === 'results' && lotteryResults && (
+            <div className="space-y-6">
+              {/* Statistics Overview */}
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <div className="bg-blue-50 p-4 rounded-lg text-center">
+                  <div className="text-2xl font-bold text-blue-900">{lotteryResults.statistics?.totalTeams || 0}</div>
+                  <div className="text-sm text-blue-700">Totaal Teams</div>
+                </div>
+                <div className="bg-green-50 p-4 rounded-lg text-center">
+                  <div className="text-2xl font-bold text-green-600">{lotteryResults.statistics?.assignedTeams || 0}</div>
+                  <div className="text-sm text-green-700">Toegewezen</div>
+                </div>
+                <div className="bg-orange-50 p-4 rounded-lg text-center">
+                  <div className="text-2xl font-bold text-orange-600">{lotteryResults.statistics?.unassignedTeams || 0}</div>
+                  <div className="text-sm text-orange-700">Wachtlijst</div>
+                </div>
+                <div className="bg-purple-50 p-4 rounded-lg text-center">
+                  <div className="text-2xl font-bold text-purple-600">
+                    {lotteryResults.statistics?.totalTeams ? 
+                      Math.round((lotteryResults.statistics.assignedTeams / lotteryResults.statistics.totalTeams) * 100) : 0
+                    }%
+                  </div>
+                  <div className="text-sm text-purple-700">Succes Ratio</div>
+                </div>
+              </div>
+
+              {/* Assignments by Timeslot */}
+              <div>
+                <h3 className="font-bold text-lg text-gray-900 mb-4">Toewijzingen per Tijdslot</h3>
+                <div className="space-y-4">
+                  {lotteryResults.timeslotDetails?.map((slot: TimeslotDetail) => (
+                    <div key={slot.id} className="border rounded-lg p-4">
+                      <div className="flex items-center justify-between mb-3">
+                        <h4 className="font-medium text-lg">
+                          {getDayName(slot.dayOfWeek)} {slot.startTime} - {slot.endTime}
+                        </h4>
+                        <span className="bg-gray-100 text-gray-800 px-2 py-1 rounded text-sm">
+                          {slot.assignedTeams.length} / {slot.maxTeams} teams
+                        </span>
+                      </div>
+                      <div className="grid gap-2">
+                        {slot.assignedTeams.map((team) => (
+                          <div key={team.id} className="flex items-center justify-between p-2 bg-gray-50 rounded">
+                            <div>
+                              <span className="font-medium">{team.firstName} {team.lastName}</span>
+                              <span className="text-sm text-gray-500 ml-2">({team.memberCount} spelers)</span>
+                            </div>
+                            <div className="flex items-center space-x-2">
+                              {getMethodBadge(team.assignmentMethod)}
+                              <span className="text-xs text-gray-500">Prioriteit {team.priority}</span>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Unassigned Teams */}
+              {lotteryResults.unassignedTeams && lotteryResults.unassignedTeams.length > 0 && (
+                <div>
+                  <h3 className="font-bold text-lg text-gray-900 mb-4">Wachtlijst Teams</h3>
+                  <div className="bg-orange-50 border border-orange-200 rounded-lg p-4">
+                    <div className="space-y-2">
+                      {lotteryResults.unassignedTeams.map((team: UnassignedTeam) => (
+                        <div key={team.id} className="flex items-center justify-between p-2 bg-white rounded">
+                          <div>
+                            <span className="font-medium">{team.firstName} {team.lastName}</span>
+                            <span className="text-sm text-gray-500 ml-2">{team.contactEmail}</span>
+                          </div>
+                          <span className="text-xs text-orange-600 bg-orange-100 px-2 py-1 rounded">
+                            {team.reason}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Email Management Tab */}
+          {activeSubTab === 'emails' && lotteryResults && (
+            <div className="space-y-6">
+              <div className="flex items-center justify-between">
+                <h3 className="font-bold text-lg text-gray-900">E-mail Beheer</h3>
+                <div className="flex space-x-2">
+                  <button
+                    onClick={selectAllAssigned}
+                    className="px-3 py-1 text-sm bg-green-100 text-green-700 rounded hover:bg-green-200"
+                  >
+                    Alle Toegewezen
+                  </button>
+                  <button
+                    onClick={selectAllUnassigned}
+                    className="px-3 py-1 text-sm bg-orange-100 text-orange-700 rounded hover:bg-orange-200"
+                  >
+                    Alle Wachtlijst
+                  </button>
+                  <button
+                    onClick={clearSelection}
+                    className="px-3 py-1 text-sm bg-gray-100 text-gray-700 rounded hover:bg-gray-200"
+                  >
+                    Leeg Selectie
+                  </button>
+                </div>
+              </div>
+
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                <p className="text-sm text-blue-800">
+                  <strong>Geselecteerd:</strong> {selectedTeamsForEmail.length} teams
+                </p>
+                <div className="flex space-x-4 mt-3">
+                  <button
+                    onClick={() => onSendEmailsToTeams(selectedTeamsForEmail, 'assignment')}
+                    disabled={isSendingEmails || selectedTeamsForEmail.length === 0}
+                    className="flex items-center space-x-2 bg-green-600 hover:bg-green-700 disabled:bg-gray-400 text-white px-4 py-2 rounded-lg transition-colors"
+                  >
+                    <Mail className="h-4 w-4" />
+                    <span>{isSendingEmails ? 'Versturen...' : 'Stuur Toewijzing E-mails'}</span>
+                  </button>
+                  <button
+                    onClick={() => onSendEmailsToTeams(selectedTeamsForEmail, 'waitlist')}
+                    disabled={isSendingEmails || selectedTeamsForEmail.length === 0}
+                    className="flex items-center space-x-2 bg-orange-600 hover:bg-orange-700 disabled:bg-gray-400 text-white px-4 py-2 rounded-lg transition-colors"
+                  >
+                    <Mail className="h-4 w-4" />
+                    <span>{isSendingEmails ? 'Versturen...' : 'Stuur Wachtlijst E-mails'}</span>
+                  </button>
+                </div>
+              </div>
+
+              {/* Team Selection */}
+              <div className="space-y-4">
+                <div>
+                  <h4 className="font-medium text-gray-900 mb-3">Toegewezen Teams</h4>
+                  <div className="space-y-2 max-h-64 overflow-y-auto">
+                    {lotteryResults.timeslotDetails?.map((slot: TimeslotDetail) => (
+                      <div key={slot.id}>
+                        <h5 className="text-sm font-medium text-gray-700 mb-2">
+                          {getDayName(slot.dayOfWeek)} {slot.startTime} - {slot.endTime}
+                        </h5>
+                        {slot.assignedTeams.map((team) => (
+                          <label key={team.id} className="flex items-center space-x-3 p-2 hover:bg-gray-50 rounded cursor-pointer">
+                            <input
+                              type="checkbox"
+                              checked={selectedTeamsForEmail.includes(team.id)}
+                              onChange={() => toggleTeamSelection(team.id)}
+                              className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                            />
+                            <div className="flex-1">
+                              <span className="font-medium">{team.firstName} {team.lastName}</span>
+                              <span className="text-sm text-gray-500 ml-2">{team.contactEmail}</span>
+                            </div>
+                            <div className="text-xs text-gray-500">
+                              {team.emailSent ? 
+                                <span className="text-green-600">✓ Verzonden</span> : 
+                                <span className="text-gray-400">Nog niet verzonden</span>
+                              }
+                            </div>
+                          </label>
+                        ))}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {lotteryResults.unassignedTeams && lotteryResults.unassignedTeams.length > 0 && (
+                  <div>
+                    <h4 className="font-medium text-gray-900 mb-3">Wachtlijst Teams</h4>
+                    <div className="space-y-2 max-h-64 overflow-y-auto">
+                      {lotteryResults.unassignedTeams.map((team: UnassignedTeam) => (
+                        <label key={team.id} className="flex items-center space-x-3 p-2 hover:bg-gray-50 rounded cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={selectedTeamsForEmail.includes(team.id)}
+                            onChange={() => toggleTeamSelection(team.id)}
+                            className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                          />
+                          <div className="flex-1">
+                            <span className="font-medium">{team.firstName} {team.lastName}</span>
+                            <span className="text-sm text-gray-500 ml-2">{team.contactEmail}</span>
+                          </div>
+                          <span className="text-xs text-orange-600 bg-orange-100 px-2 py-1 rounded">
+                            {team.reason}
+                          </span>
+                        </label>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
   )
 }
 
